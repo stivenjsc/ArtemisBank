@@ -1,6 +1,6 @@
 using ArtemisBank.Core.Application.DTOs.Commerce;
 
-namespace ArtemisBank.Core.Application.Interfaces.Services
+namespace ArtemisBank.Core.Application.Interfaces.IServices
 {
     public interface ICommerceService
     {

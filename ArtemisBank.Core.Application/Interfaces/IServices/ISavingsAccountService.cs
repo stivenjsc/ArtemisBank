@@ -1,6 +1,6 @@
-using ArtemisBank.Core.Application.DTOs.SavingsAccount; 
+using ArtemisBank.Core.Application.DTOs.SavingsAccount;
 
-namespace ArtemisBank.Core.Application.Interfaces.Services
+namespace ArtemisBank.Core.Application.Interfaces.IServices
 {
     public interface ISavingsAccountService
     {

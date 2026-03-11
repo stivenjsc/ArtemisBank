@@ -1,6 +1,6 @@
 using ArtemisBank.Core.Application.DTOs.CreditCard;
 
-namespace ArtemisBank.Core.Application.Interfaces.Services
+namespace ArtemisBank.Core.Application.Interfaces.IServices
 {
     public interface ICreditCardService
     {

@@ -1,4 +1,4 @@
-namespace ArtemisBank.Core.Application.Interfaces.Services
+namespace ArtemisBank.Core.Application.Interfaces.IServices
 {
     public interface IUserService
     {
