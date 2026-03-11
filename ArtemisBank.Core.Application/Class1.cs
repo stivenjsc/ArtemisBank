@@ -1,7 +1,5 @@
-﻿namespace ArtemisBank.Core.Application
-{
-    public class Class1
-    {
+namespace ArtemisBank.Core.Application;
 
-    }
+public class Class1
+{
 }
