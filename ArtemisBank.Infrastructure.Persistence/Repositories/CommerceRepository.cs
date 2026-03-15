@@ -26,9 +26,9 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<Commerce> GetByIdWithUserAsync(int commerceId)
+        public async Task<Commerce?> GetByIdWithUserAsync(int commerceId)
         {
-            throw new NotImplementedException();
+            return await _dbSet.FirstOrDefaultAsync(c => c.Id == commerceId);
         }
     }
 }
