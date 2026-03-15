@@ -24,24 +24,24 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             if (user == null)
             {
-                return new AuthenticationResult { Success = false, Error = "Usuario no encontrado." };
+                return new AuthenticationResult { Success = false, Error = "User not found." };
             }
 
             if (!user.IsActive)
             {
-                return new AuthenticationResult { Success = false, Error = "La cuenta está desactivada." };
+                return new AuthenticationResult { Success = false, Error = "The account is disabled." };
             }
 
             if (!user.EmailConfirmed)
             {
-                return new AuthenticationResult { Success = false, Error = "El correo no ha sido confirmado." };
+                return new AuthenticationResult { Success = false, Error = "The email is not confirmed yet." };
             }
 
             var result = await _signInManager.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: true);
 
             if (!result.Succeeded)
             {
-                return new AuthenticationResult { Success = false, Error = "Credenciales inválidas." };
+                return new AuthenticationResult { Success = false, Error = "Invalid credentials." };
             }
 
             var roles = await _userManager.GetRolesAsync(user);

@@ -11,7 +11,7 @@ namespace ArtemisBank.Core.Domain.Interfaces
         // check if a customer already has an active loan
         Task<bool> ClientHasActiveLoanAsync(string clientId);
         Task<IEnumerable<Loan>> GetActiveByClientIdAsync(string clientId);
-        Task<IEnumerable<Loan>> GetAllByClientIdentificationNumberAsync(string cedula);
+        Task<IEnumerable<Loan>> GetAllByClientCedulaAsync(string cedula);
         // calculate the average debt of all customers in the system
         Task<decimal> GetAverageDebtAsync();
         Task<int> GetTotalActiveLoansCountAsync();

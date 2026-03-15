@@ -1,3 +1,4 @@
+using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 
 namespace ArtemisBank.Infrastructure.Identity.Entities
@@ -7,6 +8,9 @@ namespace ArtemisBank.Infrastructure.Identity.Entities
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Cedula { get; set; } = string.Empty;
+        public UserRole Role { get; set; }
+        public string? ActivationToken { get; set; }
         public bool IsActive { get; set; } = true;
+        public int? CommerceId { get; set; }
     }
 }

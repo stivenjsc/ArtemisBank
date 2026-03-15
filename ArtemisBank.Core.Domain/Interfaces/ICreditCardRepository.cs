@@ -12,7 +12,7 @@ namespace ArtemisBank.Core.Domain.Interfaces
         Task<bool> CardNumberExistsAsync(string cardNumber);
         Task<decimal> GetTotalCardDebtByClientIdAsync(string clientId);
         Task<IEnumerable<CreditCard>> GetActiveCardsByClientIdAsync(string clientId);
-        Task<IEnumerable<CreditCard>> GetAllPagedAsync(int page, int pageSize, CardStatus? status = null, string? identificationNumber = null);
+        Task<IEnumerable<CreditCard>> GetAllPagedAsync(int page, int pageSize, CardStatus? status = null, string? cedula = null);
         Task<int> GetTotalActiveCardsCountAsync();
     }
 }
