@@ -5,9 +5,7 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
     public interface ICreditCardConsumptionService
     {
         Task<CreditCardConsumptionDto> GetByIdAsync(int id);
-        Task<IEnumerable<CreditCardConsumptionDto>> GetAllAsync();
+        Task<IEnumerable<CreditCardConsumptionDto>> GetByCardIdAsync(int creditCardId);
         Task AddAsync(CreditCardConsumptionDto dto);
-        Task UpdateAsync(CreditCardConsumptionDto dto);
-        Task DeleteAsync(int id);
     }
 }

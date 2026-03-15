@@ -5,9 +5,9 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
     public interface IBeneficiaryService
     {
         Task<BeneficiaryDto> GetByIdAsync(int id);
-        Task<IEnumerable<BeneficiaryDto>> GetAllAsync();
-        Task AddAsync(BeneficiaryDto dto);
-        Task UpdateAsync(BeneficiaryDto dto);
+        Task<IEnumerable<BeneficiaryDto>> GetByOwnerIdAsync(string ownerId);
+        Task<bool> AddAsync(string ownerId, string accountNumber);
         Task DeleteAsync(int id);
+        Task<bool> BeneficiaryExistsForOwnerAsync(string ownerId, string accountNumber);
     }
 }

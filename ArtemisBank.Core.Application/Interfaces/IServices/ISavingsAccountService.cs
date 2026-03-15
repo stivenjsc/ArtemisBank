@@ -1,13 +1,26 @@
+using ArtemisBank.Core.Application.DTOs;
 using ArtemisBank.Core.Application.DTOs.SavingsAccount;
+using ArtemisBank.Core.Domain.Enums;
 
 namespace ArtemisBank.Core.Application.Interfaces.IServices
 {
     public interface ISavingsAccountService
     {
         Task<SavingsAccountDto> GetByIdAsync(int id);
-        Task<IEnumerable<SavingsAccountDto>> GetAllAsync();
-        Task AddAsync(SavingsAccountDto dto);
+        Task<SavingsAccountDto?> GetByAccountNumberAsync(string accountNumber);
+        Task<IEnumerable<SavingsAccountDto>> GetByClientIdAsync(string clientId);
+        Task<SavingsAccountDto?> GetPrimaryAccountByClientIdAsync(string clientId);
+        Task<PaginatedResult<SavingsAccountDto>> GetAllPagedAsync(int page, int pageSize = 20, AccountStatus? status = null, AccountType? type = null);
+
+        Task<SavingsAccountDto> CreateAccountAsync(string clientId, decimal initialAmount, AccountType type = AccountType.Primary);
         Task UpdateAsync(SavingsAccountDto dto);
-        Task DeleteAsync(int id);
+        Task<bool> ChangeStatusAsync(int accountId, AccountStatus status);
+
+        Task<bool> DepositAsync(string accountNumber, decimal amount);
+        Task<bool> WithdrawAsync(string accountNumber, decimal amount);
+        Task<bool> TransferAsync(string sourceAccountNumber, string destinationAccountNumber, decimal amount);
+
+        Task<bool> AccountNumberExistsAsync(string accountNumber);
+        Task<int> GetTotalActiveAccountsCountAsync();
     }
 }
