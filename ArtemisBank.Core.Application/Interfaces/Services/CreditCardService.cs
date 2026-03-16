@@ -8,7 +8,7 @@ using ArtemisBank.Core.Domain.Entities;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Domain.Interfaces;
 
-namespace ArtemisBank.Core.Application.Services
+namespace ArtemisBank.Core.Application.Interfaces.Services
 {
     public class CreditCardService : ICreditCardService
     {

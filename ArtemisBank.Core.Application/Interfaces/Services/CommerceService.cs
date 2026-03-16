@@ -5,7 +5,7 @@ using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Entities;
 using ArtemisBank.Core.Domain.Interfaces;
 
-namespace ArtemisBank.Core.Application.Services
+namespace ArtemisBank.Core.Application.Interfaces.Services
 {
     public class CommerceService : ICommerceService
     {
