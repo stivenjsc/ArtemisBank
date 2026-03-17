@@ -1,0 +1,16 @@
+using ArtemisBank.Core.Application.DTOs.CreditCard;
+using ArtemisBank.Core.Application.DTOs.Loan;
+using ArtemisBank.Core.Application.DTOs.SavingsAccount;
+
+namespace ArtemisBank.ViewModels.Dashboard
+{
+    public class ClientDashboardViewModel
+    {
+        public int TotalSavingsAccounts { get; set; }
+        public int TotalCreditCards { get; set; }
+        public int TotalLoans { get; set; }
+        public IEnumerable<SavingsAccountDto> SavingsAccounts { get; set; } = [];
+        public IEnumerable<CreditCardDto> CreditCards { get; set; } = [];
+        public IEnumerable<LoanDto> Loans { get; set; } = [];
+    }
+}
