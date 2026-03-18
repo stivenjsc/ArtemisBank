@@ -22,5 +22,6 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
 
         Task<bool> AccountNumberExistsAsync(string accountNumber);
         Task<int> GetTotalActiveAccountsCountAsync();
+        Task<bool> HasActiveAccountAsync(string clientId);
     }
 }

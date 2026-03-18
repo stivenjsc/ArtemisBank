@@ -154,6 +154,12 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             return await _repo.GetTotalActiveAccountsCountAsync();
         }
 
+        public async Task<bool> HasActiveAccountAsync(string clientId)
+        {
+            var accounts = await _repo.GetAllAccountByClienteIdAsync(clientId);
+            return accounts.Any(a => a.Status == AccountStatus.Active);
+        }
+
         private static string GenerateAccountNumber()
         {
             return $"ATB{Random.Shared.Next(100000000, 999999999)}";
