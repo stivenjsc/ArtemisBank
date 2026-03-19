@@ -1,16 +1,16 @@
 using System.ComponentModel.DataAnnotations;
-using ArtemisBank.Core.Application.DTOs.Loan;
 using ArtemisBank.Core.Application.DTOs.SavingsAccount;
 
-namespace ArtemisBank.ViewModels.Transaction
+namespace ArtemisBank.Core.Application.ViewModels.Transaction
 {
-    public class LoanPaymentViewModel
+    public class ExpressPaymentViewModel
     {
         [Required(ErrorMessage = "La cuenta de origen es requerida.")]
         public string SourceAccountNumber { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "El préstamo es requerido.")]
-        public string LoanNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "La cuenta de destino es requerida.")]
+        [StringLength(12, ErrorMessage = "El número de cuenta no es válido.", MinimumLength = 9)]
+        public string DestinationAccountNumber { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El monto es requerido.")]
         [DataType(DataType.Currency)]
@@ -18,7 +18,6 @@ namespace ArtemisBank.ViewModels.Transaction
         public decimal Amount { get; set; }
 
         public IEnumerable<SavingsAccountDto> UserAccounts { get; set; } = [];
-        public IEnumerable<LoanDto> UserLoans { get; set; } = [];
 
         public bool HasError { get; set; }
         public string? Error { get; set; }

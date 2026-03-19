@@ -1,4 +1,4 @@
-namespace ArtemisBank.ViewModels.Dashboard
+namespace ArtemisBank.Core.Application.ViewModels.Dashboard
 {
     public class AdminDashboardViewModel
     {

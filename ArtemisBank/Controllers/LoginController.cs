@@ -1,6 +1,6 @@
 using ArtemisBank.Core.Application.Interfaces.IServices;
-using ArtemisBank.ViewModels.User;
-using Microsoft.AspNetCore.Authentication;
+using ArtemisBank.Core.Application.ViewModels.User;
+using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArtemisBank.Controllers
@@ -19,9 +19,13 @@ namespace ArtemisBank.Controllers
         {
             if (User.Identity?.IsAuthenticated == true)
             {
-                return User.IsInRole("Admin")
-                    ? RedirectToAction("Index", "Admin")
-                    : RedirectToAction("Index", "Client");
+                if (User.IsInRole(nameof(UserRole.Admin)))
+                    return RedirectToAction("Index", "Admin");
+
+                if (User.IsInRole(nameof(UserRole.Cashier)))
+                    return RedirectToAction("Index", "Cashier");
+
+                return RedirectToAction("Index", "Client");
             }
 
             return View(new LoginViewModel());
@@ -44,17 +48,19 @@ namespace ArtemisBank.Controllers
                 return View(vm);
             }
 
-            if (result.Role == Core.Domain.Enums.UserRole.Admin)
+            return result.Role switch
             {
-                return RedirectToAction("Index", "Admin");
-            }
-
-            return RedirectToAction("Index", "Client");
+                UserRole.Admin => RedirectToAction("Index", "Admin"),
+                UserRole.Cashier => RedirectToAction("Index", "Cashier"),
+                _ => RedirectToAction("Index", "Client")
+            };
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync();
+            await _userService.LogoutAsync();
             return RedirectToAction("Index");
         }
 
@@ -72,9 +78,6 @@ namespace ArtemisBank.Controllers
                 return View(vm);
             }
 
-            // The service handles sending the reset email
-            vm.HasError = false;
-            vm.Error = null;
             return View("ForgotPasswordConfirmation");
         }
 

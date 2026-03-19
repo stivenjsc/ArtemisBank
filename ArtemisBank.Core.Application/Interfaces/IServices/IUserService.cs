@@ -10,7 +10,7 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         Task<AuthenticationResult> AuthenticateAsync(string username, string password);
 
         // Registration
-        Task<bool> RegisterAsync(string firstName, string lastName, string username, string email, string password, string role);
+        Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, string role);
         Task<bool> ConfirmEmailAsync(string userId, string token);
 
         // Password
@@ -19,6 +19,8 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         // User management
         Task<UserDto> GetByIdAsync(string userId);
         Task<PaginatedResult<UserDto>> GetAllAsync(int page, int pageSize = 20, UserRole? role = null);
+        Task<bool> UpdateAsync(UpdateUserDto dto);
         Task<bool> ChangeStatusAsync(string adminId, string userId, bool isActive);
+        Task LogoutAsync();
     }
 }

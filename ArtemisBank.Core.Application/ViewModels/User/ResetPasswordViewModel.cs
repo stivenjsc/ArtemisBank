@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ArtemisBank.ViewModels.User
+namespace ArtemisBank.Core.Application.ViewModels.User
 {
     public class ResetPasswordViewModel
     {

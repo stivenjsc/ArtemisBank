@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ArtemisBank.ViewModels.CreditCard
+namespace ArtemisBank.Core.Application.ViewModels.CreditCard
 {
     public class AssignCreditCardViewModel
     {

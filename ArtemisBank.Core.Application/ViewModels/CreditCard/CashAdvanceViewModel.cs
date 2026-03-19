@@ -1,22 +1,23 @@
 using System.ComponentModel.DataAnnotations;
+using ArtemisBank.Core.Application.DTOs.CreditCard;
 using ArtemisBank.Core.Application.DTOs.SavingsAccount;
 
-namespace ArtemisBank.ViewModels.Transaction
+namespace ArtemisBank.Core.Application.ViewModels.CreditCard
 {
-    public class ExpressPaymentViewModel
+    public class CashAdvanceViewModel
     {
-        [Required(ErrorMessage = "La cuenta de origen es requerida.")]
-        public string SourceAccountNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "La tarjeta de crédito es requerida.")]
+        public int CreditCardId { get; set; }
 
-        [Required(ErrorMessage = "La cuenta de destino es requerida.")]
-        [StringLength(9, ErrorMessage = "El número de cuenta debe tener {1} caracteres.", MinimumLength = 9)]
-        public string DestinationAccountNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "La cuenta de ahorro es requerida.")]
+        public int SavingsAccountId { get; set; }
 
         [Required(ErrorMessage = "El monto es requerido.")]
         [DataType(DataType.Currency)]
         [Range(0.01, double.MaxValue, ErrorMessage = "El monto debe ser mayor a cero.")]
         public decimal Amount { get; set; }
 
+        public IEnumerable<CreditCardDto> UserCreditCards { get; set; } = [];
         public IEnumerable<SavingsAccountDto> UserAccounts { get; set; } = [];
 
         public bool HasError { get; set; }

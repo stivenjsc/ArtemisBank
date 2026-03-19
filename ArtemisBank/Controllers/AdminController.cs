@@ -1,5 +1,5 @@
 using ArtemisBank.Core.Application.Interfaces.IServices;
-using ArtemisBank.ViewModels.Dashboard;
+using ArtemisBank.Core.Application.ViewModels.Dashboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

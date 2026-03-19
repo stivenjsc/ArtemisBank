@@ -1,12 +1,13 @@
 using ArtemisBank.Core.Application.Interfaces.IServices;
-using ArtemisBank.ViewModels.Beneficiary;
+using ArtemisBank.Core.Application.ViewModels.Beneficiary;
+using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace ArtemisBank.Controllers
 {
-    [Authorize(Roles = "Client")]
+    [Authorize(Roles = nameof(UserRole.Client))]
     public class BeneficiaryController : Controller
     {
         private readonly IBeneficiaryService _beneficiaryService;
@@ -32,6 +33,7 @@ namespace ArtemisBank.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(SaveBeneficiaryViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -62,8 +64,17 @@ namespace ArtemisBank.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
+            var clientId = GetClientId();
+            var beneficiary = await _beneficiaryService.GetByIdAsync(id);
+
+            if (beneficiary.OwnerId != clientId)
+            {
+                return Forbid();
+            }
+
             await _beneficiaryService.DeleteAsync(id);
             return RedirectToAction("Index");
         }

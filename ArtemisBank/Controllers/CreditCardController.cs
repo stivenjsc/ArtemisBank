@@ -1,6 +1,7 @@
 using ArtemisBank.Core.Application.DTOs.CreditCard;
 using ArtemisBank.Core.Application.Interfaces.IServices;
-using ArtemisBank.ViewModels.CreditCard;
+using ArtemisBank.Core.Application.ViewModels.CreditCard;
+using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,24 +13,64 @@ namespace ArtemisBank.Controllers
     {
         private readonly ICreditCardService _creditCardService;
         private readonly ISavingsAccountService _savingsAccountService;
+        private readonly ICreditCardConsumptionService _consumptionService;
 
-        public CreditCardController(ICreditCardService creditCardService, ISavingsAccountService savingsAccountService)
+        public CreditCardController(
+            ICreditCardService creditCardService,
+            ISavingsAccountService savingsAccountService,
+            ICreditCardConsumptionService consumptionService)
         {
             _creditCardService = creditCardService;
             _savingsAccountService = savingsAccountService;
+            _consumptionService = consumptionService;
         }
+
+        #region Admin - List
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        public async Task<IActionResult> Index(int page = 1, CardStatus? status = null, string? cedula = null)
+        {
+            var result = await _creditCardService.GetAllPagedAsync(page, 20, status, cedula);
+            ViewBag.CurrentStatus = status;
+            ViewBag.CurrentCedula = cedula;
+            return View(result);
+        }
+
+        #endregion
+
+        #region Admin - Detail with Consumptions
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        public async Task<IActionResult> Detail(int id)
+        {
+            var card = await _creditCardService.GetByIdAsync(id);
+            if (card == null) return NotFound();
+
+            var consumptions = await _consumptionService.GetByCardIdAsync(id);
+
+            var vm = new CreditCardDetailViewModel
+            {
+                CreditCard = card,
+                Consumptions = consumptions
+            };
+
+            return View(vm);
+        }
+
+        #endregion
 
         #region Admin - Assign Credit Card
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpGet]
         public IActionResult Assign()
         {
             return View(new AssignCreditCardViewModel());
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Assign(AssignCreditCardViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -45,7 +86,7 @@ namespace ArtemisBank.Controllers
                     CreditLimit = vm.CreditLimit
                 });
 
-                return RedirectToAction("Index", "Admin");
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
@@ -57,9 +98,72 @@ namespace ArtemisBank.Controllers
 
         #endregion
 
+        #region Admin - Edit Credit Limit
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpGet]
+        public async Task<IActionResult> EditLimit(int id)
+        {
+            var card = await _creditCardService.GetByIdAsync(id);
+            if (card == null) return NotFound();
+
+            var vm = new EditCreditCardLimitViewModel
+            {
+                CardId = card.Id,
+                CardNumber = card.CardNumber,
+                CurrentCreditLimit = card.CreditLimit,
+                NewCreditLimit = card.CreditLimit,
+                AmountOwed = card.AmountOwed
+            };
+
+            return View(vm);
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditLimit(EditCreditCardLimitViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(vm);
+            }
+
+            try
+            {
+                var card = await _creditCardService.GetByIdAsync(vm.CardId);
+                if (card == null) return NotFound();
+
+                card.CreditLimit = vm.NewCreditLimit;
+
+                return RedirectToAction("Detail", new { id = vm.CardId });
+            }
+            catch (Exception ex)
+            {
+                vm.HasError = true;
+                vm.Error = ex.Message;
+                return View(vm);
+            }
+        }
+
+        #endregion
+
+        #region Admin - Cancel Card
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            await _creditCardService.ChangeStatusAsync(id, CardStatus.Inactive);
+            return RedirectToAction("Index");
+        }
+
+        #endregion
+
         #region Client - Cash Advance
 
-        [Authorize(Roles = "Client")]
+        [Authorize(Roles = nameof(UserRole.Client))]
         [HttpGet]
         public async Task<IActionResult> CashAdvance()
         {
@@ -72,8 +176,9 @@ namespace ArtemisBank.Controllers
             return View(vm);
         }
 
-        [Authorize(Roles = "Client")]
+        [Authorize(Roles = nameof(UserRole.Client))]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CashAdvance(CashAdvanceViewModel vm)
         {
             var clientId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;

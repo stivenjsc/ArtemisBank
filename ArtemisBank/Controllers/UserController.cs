@@ -1,20 +1,23 @@
 using ArtemisBank.Core.Application.DTOs.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Enums;
-using ArtemisBank.ViewModels.User;
+using ArtemisBank.Core.Application.ViewModels.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ArtemisBank.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public class UserController : Controller
     {
         private readonly IUserService _userService;
+        private readonly ISavingsAccountService _savingsAccountService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, ISavingsAccountService savingsAccountService)
         {
             _userService = userService;
+            _savingsAccountService = savingsAccountService;
         }
 
         public async Task<IActionResult> Index(int page = 1, UserRole? role = null)
@@ -41,6 +44,7 @@ namespace ArtemisBank.Controllers
             var registered = await _userService.RegisterAsync(
                 vm.FirstName,
                 vm.LastName,
+                vm.Cedula,
                 vm.Username,
                 vm.Email,
                 vm.Password,
@@ -84,14 +88,43 @@ namespace ArtemisBank.Controllers
                 return View(vm);
             }
 
-            // Update is handled through the service
+            var updateDto = new UpdateUserDto
+            {
+                Id = vm.Id,
+                FirstName = vm.FirstName,
+                LastName = vm.LastName,
+                Cedula = vm.Cedula,
+                Email = vm.Email,
+                Password = vm.Password,
+                ConfirmPassword = vm.ConfirmPassword
+            };
+
+            var updated = await _userService.UpdateAsync(updateDto);
+
+            if (!updated)
+            {
+                vm.HasError = true;
+                vm.Error = "No se pudo actualizar el usuario.";
+                return View(vm);
+            }
+
+            if (vm.AdditionalAmount.HasValue && vm.AdditionalAmount.Value > 0)
+            {
+                var primaryAccount = await _savingsAccountService.GetPrimaryAccountByClientIdAsync(vm.Id);
+                if (primaryAccount != null)
+                {
+                    await _savingsAccountService.DepositAsync(primaryAccount.AccountNumber, vm.AdditionalAmount.Value);
+                }
+            }
+
             return RedirectToAction("Index");
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStatus(string userId, bool activate)
         {
-            var adminId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(adminId))
             {

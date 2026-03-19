@@ -1,11 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ArtemisBank.ViewModels.Loan
+namespace ArtemisBank.Core.Application.ViewModels.Loan
 {
     public class AssignLoanViewModel
     {
         [Required(ErrorMessage = "El cliente es requerido.")]
         public string ClientId { get; set; } = string.Empty;
+
+        public string ClientName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El monto del préstamo es requerido.")]
         [DataType(DataType.Currency)]
@@ -19,6 +21,8 @@ namespace ArtemisBank.ViewModels.Loan
         [Required(ErrorMessage = "El plazo en meses es requerido.")]
         [Range(1, 360, ErrorMessage = "El plazo debe estar entre {1} y {2} meses.")]
         public int TermInMonths { get; set; }
+
+        public bool IsHighRisk { get; set; }
 
         public bool HasError { get; set; }
         public string? Error { get; set; }

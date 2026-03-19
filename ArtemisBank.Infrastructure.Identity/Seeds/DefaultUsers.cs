@@ -14,7 +14,7 @@ namespace ArtemisBank.Infrastructure.Identity.Seeds
                 Email = "admin@artemisbank.com",
                 FirstName = "Admin",
                 LastName = "ArtemisBank",
-                Cedula = "000-0000000-0",
+                Cedula = "00000000000",
                 EmailConfirmed = true,
                 IsActive = true
             };

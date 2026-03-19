@@ -2,7 +2,7 @@ using ArtemisBank.Core.Application.DTOs.CreditCard;
 using ArtemisBank.Core.Application.DTOs.Loan;
 using ArtemisBank.Core.Application.DTOs.SavingsAccount;
 
-namespace ArtemisBank.ViewModels.Dashboard
+namespace ArtemisBank.Core.Application.ViewModels.Dashboard
 {
     public class ClientDashboardViewModel
     {

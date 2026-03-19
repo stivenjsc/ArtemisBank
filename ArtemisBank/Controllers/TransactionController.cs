@@ -1,13 +1,14 @@
 using ArtemisBank.Core.Application.DTOs.Transaction;
 using ArtemisBank.Core.Application.Interfaces.IServices;
-using ArtemisBank.ViewModels.Transaction;
+using ArtemisBank.Core.Application.ViewModels.Transaction;
+using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace ArtemisBank.Controllers
 {
-    [Authorize(Roles = "Client")]
+    [Authorize(Roles = nameof(UserRole.Client))]
     public class TransactionController : Controller
     {
         private readonly ITransactionService _transactionService;
@@ -46,6 +47,7 @@ namespace ArtemisBank.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Transfer(TransferViewModel vm)
         {
             var clientId = GetClientId();
@@ -92,6 +94,7 @@ namespace ArtemisBank.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ExpressPayment(ExpressPaymentViewModel vm)
         {
             var clientId = GetClientId();
@@ -139,6 +142,7 @@ namespace ArtemisBank.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreditCardPayment(CreditCardPaymentViewModel vm)
         {
             var clientId = GetClientId();
@@ -188,6 +192,7 @@ namespace ArtemisBank.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoanPayment(LoanPaymentViewModel vm)
         {
             var clientId = GetClientId();
@@ -237,6 +242,7 @@ namespace ArtemisBank.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> BeneficiaryPayment(BeneficiaryPaymentViewModel vm)
         {
             var clientId = GetClientId();
@@ -252,7 +258,12 @@ namespace ArtemisBank.Controllers
             {
                 var beneficiary = await _beneficiaryService.GetByIdAsync(vm.BeneficiaryId);
 
-                await _transactionService.PayExpressAsync(new PaymentDto
+                if (beneficiary.OwnerId != clientId)
+                {
+                    return Forbid();
+                }
+
+                await _transactionService.TransferAsync(new TransferDto
                 {
                     SourceAccountNumber = vm.SourceAccountNumber,
                     DestinationAccountNumber = beneficiary.AccountNumber,

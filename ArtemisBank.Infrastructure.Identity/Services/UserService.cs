@@ -45,7 +45,14 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             }
 
             var roles = await _userManager.GetRolesAsync(user);
-            var role = Enum.Parse<UserRole>(roles.First());
+            var roleName = roles.FirstOrDefault();
+
+            if (string.IsNullOrEmpty(roleName))
+            {
+                return new AuthenticationResult { Success = false, Error = "The user has no assigned role." };
+            }
+
+            var role = Enum.Parse<UserRole>(roleName);
 
             return new AuthenticationResult
             {
@@ -59,7 +66,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             };
         }
 
-        public async Task<bool> RegisterAsync(string firstName, string lastName, string username, string email, string password, string role)
+        public async Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, string role)
         {
             var existingUser = await _userManager.FindByNameAsync(username);
             if (existingUser != null) return false;
@@ -67,13 +74,18 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var existingEmail = await _userManager.FindByEmailAsync(email);
             if (existingEmail != null) return false;
 
+            var parsedRole = Enum.Parse<UserRole>(role);
+
             var user = new ApplicationUser
             {
                 FirstName = firstName,
                 LastName = lastName,
+                Cedula = cedula,
                 UserName = username,
                 Email = email,
-                IsActive = true
+                EmailConfirmed = true,
+                IsActive = true,
+                Role = parsedRole
             };
 
             var result = await _userManager.CreateAsync(user, password);
@@ -181,6 +193,32 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             user.IsActive = isActive;
             var result = await _userManager.UpdateAsync(user);
             return result.Succeeded;
+        }
+
+        public async Task<bool> UpdateAsync(UpdateUserDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(dto.Id);
+            if (user == null) return false;
+
+            user.FirstName = dto.FirstName;
+            user.LastName = dto.LastName;
+            user.Cedula = dto.Cedula;
+            user.Email = dto.Email;
+
+            if (!string.IsNullOrWhiteSpace(dto.Password))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var passwordResult = await _userManager.ResetPasswordAsync(user, token, dto.Password);
+                if (!passwordResult.Succeeded) return false;
+            }
+
+            var result = await _userManager.UpdateAsync(user);
+            return result.Succeeded;
+        }
+
+        public async Task LogoutAsync()
+        {
+            await _signInManager.SignOutAsync();
         }
     }
 }
