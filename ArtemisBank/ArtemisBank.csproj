@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -12,6 +12,16 @@
     <ProjectReference Include="..\ArtemisBank.Infrastructure.Identity\ArtemisBank.Infrastructure.Identity.csproj" />
     <ProjectReference Include="..\ArtemisBank.Infrastructure.Persistence\ArtemisBank.Infrastructure.Persistence.csproj" />
     <ProjectReference Include="..\ArtemisBank.Infrastructure.Shared\ArtemisBank.Infrastructure.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="ViewModels\Beneficiary\" />
+    <Folder Include="ViewModels\CreditCard\" />
+    <Folder Include="ViewModels\Dashboard\" />
+    <Folder Include="ViewModels\Loan\" />
+    <Folder Include="ViewModels\Transaction\" />
+    <Folder Include="ViewModels\User\" />
   </ItemGroup>
 
 </Project>
