@@ -10,7 +10,7 @@ namespace ArtemisBank.Infrastructure.Identity.Entities
         public string Cedula { get; set; } = string.Empty;
         public UserRole Role { get; set; }
         public string? ActivationToken { get; set; }
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } = false;
         public int? CommerceId { get; set; }
     }
 }

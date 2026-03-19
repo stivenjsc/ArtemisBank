@@ -8,23 +8,51 @@ namespace ArtemisBank.Infrastructure.Identity.Seeds
     {
         public static async Task SeedAsync(UserManager<ApplicationUser> userManager)
         {
-            var defaultAdmin = new ApplicationUser
+            await SeedUserAsync(userManager, new ApplicationUser
             {
-                UserName = "adminuser",
+                UserName = "AdminUser",
                 Email = "admin@artemisbank.com",
                 FirstName = "Admin",
                 LastName = "ArtemisBank",
-                Cedula = "00000000000",
+                Cedula = "00000000001",
                 EmailConfirmed = true,
-                IsActive = true
-            };
+                IsActive = true,
+                Role = UserRole.Admin
+            }, "Admin123!", UserRole.Admin);
 
-            var user = await userManager.FindByEmailAsync(defaultAdmin.Email);
-
-            if (user == null)
+            await SeedUserAsync(userManager, new ApplicationUser
             {
-                await userManager.CreateAsync(defaultAdmin, "Admin123!");
-                await userManager.AddToRoleAsync(defaultAdmin, UserRole.Admin.ToString());
+                UserName = "CashierUser",
+                Email = "cashier@artemisbank.com",
+                FirstName = "Cashier",
+                LastName = "ArtemisBank",
+                Cedula = "00000000002",
+                EmailConfirmed = true,
+                IsActive = true,
+                Role = UserRole.Cashier
+            }, "Cashier123!", UserRole.Cashier);
+
+            await SeedUserAsync(userManager, new ApplicationUser
+            {
+                UserName = "ClientUser",
+                Email = "client@artemisbank.com",
+                FirstName = "Client",
+                LastName = "ArtemisBank",
+                Cedula = "00000000003",
+                EmailConfirmed = true,
+                IsActive = true,
+                Role = UserRole.Client
+            }, "Client123!", UserRole.Client);
+        }
+        private static async Task SeedUserAsync(UserManager<ApplicationUser> userManager, ApplicationUser user, string password, UserRole role)
+        {
+            if (await userManager.FindByEmailAsync(user.Email!) == null)
+            {
+                var result = await userManager.CreateAsync(user, password);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, role.ToString());
+                }
             }
         }
     }

@@ -4,19 +4,14 @@ using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace ArtemisBank.Infrastructure.Identity.Services
 {
-    public class UserService : IUserService
+    public class UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) : IUserService
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-
-        public UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
-        {
-            _userManager = userManager;
-            _signInManager = signInManager;
-        }
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
 
         public async Task<AuthenticationResult> AuthenticateAsync(string username, string password)
         {
@@ -24,24 +19,19 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             if (user == null)
             {
-                return new AuthenticationResult { Success = false, Error = "User not found." };
+                return Fail("The username or password are incorrect.");
             }
 
             if (!user.IsActive)
             {
-                return new AuthenticationResult { Success = false, Error = "The account is disabled." };
+                return Fail("Your account is inactive. Please activate your account using the link sent to your email.");
             }
 
-            if (!user.EmailConfirmed)
-            {
-                return new AuthenticationResult { Success = false, Error = "The email is not confirmed yet." };
-            }
-
-            var result = await _signInManager.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: true);
+            var result = await _signInManager.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: false);
 
             if (!result.Succeeded)
             {
-                return new AuthenticationResult { Success = false, Error = "Invalid credentials." };
+                return Fail("Invalid credentials.");
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -49,7 +39,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             if (string.IsNullOrEmpty(roleName))
             {
-                return new AuthenticationResult { Success = false, Error = "The user has no assigned role." };
+                return Fail("The user has no assigned role.");
             }
 
             var role = Enum.Parse<UserRole>(roleName);
@@ -65,7 +55,6 @@ namespace ArtemisBank.Infrastructure.Identity.Services
                 Role = role
             };
         }
-
         public async Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, string role)
         {
             var existingUser = await _userManager.FindByNameAsync(username);
@@ -83,16 +72,34 @@ namespace ArtemisBank.Infrastructure.Identity.Services
                 Cedula = cedula,
                 UserName = username,
                 Email = email,
-                EmailConfirmed = true,
-                IsActive = true,
+                EmailConfirmed = false,
+                IsActive = false,
                 Role = parsedRole
             };
 
             var result = await _userManager.CreateAsync(user, password);
 
             if (!result.Succeeded) return false;
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            user.ActivationToken = token;
+            await _userManager.UpdateAsync(user);
 
-            await _userManager.AddToRoleAsync(user, role);
+            return true;
+        }
+        public async Task<bool> ActivateAccountAsync(string token)
+        {
+            var user = await _userManager.Users
+                .FirstOrDefaultAsync(u => u.ActivationToken == token);
+
+            if (user == null) return false;
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            if (!result.Succeeded) return false;
+
+            user.IsActive = true;
+            user.ActivationToken = null;
+            await _userManager.UpdateAsync(user);
+
             return true;
         }
 
@@ -104,14 +111,33 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var result = await _userManager.ConfirmEmailAsync(user, token);
             return result.Succeeded;
         }
-
-        public async Task<bool> ResetPasswordAsync(string username, string token, string newPassword)
+        public async Task<bool> GeneratePasswordResetTokenAsync(string username)
         {
             var user = await _userManager.FindByNameAsync(username);
             if (user == null) return false;
 
+            user.IsActive = false;
+            await _userManager.UpdateAsync(user);
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            user.ActivationToken = token;
+            await _userManager.UpdateAsync(user);
+
+            return true;
+        }
+        public async Task<bool> ResetPasswordAsync(string username, string token, string newPassword)
+        {
+            var user = await _userManager.FindByIdAsync(username);
+            if (user == null) return false;
+
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-            return result.Succeeded;
+            if (!result.Succeeded) return false;
+
+            user.IsActive = true;
+            user.ActivationToken = null;
+            await _userManager.UpdateAsync(user);
+
+            return true;
         }
 
         public async Task<UserDto> GetByIdAsync(string userId)
@@ -121,53 +147,28 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            return new UserDto
-            {
-                Id = user.Id,
-                UserName = user.UserName!,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Cedula = user.Cedula,
-                Email = user.Email!,
-                Role = Enum.Parse<UserRole>(roles.FirstOrDefault() ?? nameof(UserRole.Client)),
-                IsActive = user.IsActive
-            };
+            return MapToDto(user, roles.FirstOrDefault());
         }
-
         public async Task<PaginatedResult<UserDto>> GetAllAsync(int page, int pageSize = 20, UserRole? role = null)
         {
-            var query = _userManager.Users.AsQueryable();
+            var query = _userManager.Users.Where(u => u.Role != UserRole.Commerce).OrderByDescending(u => u.Id.CompareTo(""));
 
             if (role.HasValue)
             {
                 var usersInRole = await _userManager.GetUsersInRoleAsync(role.Value.ToString());
                 var userIds = usersInRole.Select(u => u.Id).ToHashSet();
-                query = query.Where(u => userIds.Contains(u.Id));
+                query = (IOrderedQueryable<ApplicationUser>)query.Where(u => u.Role == role.Value);
             }
 
-            var totalCount = query.Count();
-            var users = query
-                .OrderBy(u => u.UserName)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            var totalCount = await query.CountAsync();
+            var users = await query.OrderBy(u => u.UserName).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
             var userDtos = new List<UserDto>();
 
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
-                userDtos.Add(new UserDto
-                {
-                    Id = user.Id,
-                    UserName = user.UserName!,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Cedula = user.Cedula,
-                    Email = user.Email!,
-                    Role = Enum.Parse<UserRole>(roles.FirstOrDefault() ?? nameof(UserRole.Client)),
-                    IsActive = user.IsActive
-                });
+                userDtos.Add(MapToDto(user, roles.FirstOrDefault()));
             }
 
             return new PaginatedResult<UserDto>
@@ -181,11 +182,13 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
         public async Task<bool> ChangeStatusAsync(string adminId, string userId, bool isActive)
         {
+            if (adminId == userId) return false;
+            
             var admin = await _userManager.FindByIdAsync(adminId);
             if (admin == null) return false;
 
-            var adminRoles = await _userManager.GetRolesAsync(admin);
-            if (!adminRoles.Contains(UserRole.Admin.ToString())) return false;
+            var changes = await _userManager.IsInRoleAsync(admin, UserRole.Admin.ToString());
+            if (!changes) return false;
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return false;
@@ -199,11 +202,16 @@ namespace ArtemisBank.Infrastructure.Identity.Services
         {
             var user = await _userManager.FindByIdAsync(dto.Id);
             if (user == null) return false;
+            var existingEmail = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingEmail != null && existingEmail.Id != dto.Id) return false;
 
+            var existingUser = await _userManager.FindByNameAsync(dto.Username);
+            if (existingUser != null && existingUser.Id != dto.Id) return false;
             user.FirstName = dto.FirstName;
             user.LastName = dto.LastName;
             user.Cedula = dto.Cedula;
             user.Email = dto.Email;
+            user.UserName = dto.Username;
 
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
@@ -220,5 +228,28 @@ namespace ArtemisBank.Infrastructure.Identity.Services
         {
             await _signInManager.SignOutAsync();
         }
+        public async Task<string?> GetActivationTokenAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            return user?.ActivationToken;
+        }
+
+        #region private methods
+        private static AuthenticationResult Fail(string error) =>
+            new() { Success = false, Error = error };
+
+        private static UserDto MapToDto(ApplicationUser user, string? roleName) =>
+            new()
+            {
+                Id = user.Id,
+                UserName = user.UserName!,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Cedula = user.Cedula,
+                Email = user.Email!,
+                Role = string.IsNullOrEmpty(roleName) ? UserRole.Client : Enum.Parse<UserRole>(roleName),
+                IsActive = user.IsActive
+            };
+        #endregion
     }
 }
