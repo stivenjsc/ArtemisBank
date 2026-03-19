@@ -1,7 +1,16 @@
+using ArtemisBank.Core.Application.IoC;
+using ArtemisBank.Infrastructure.Identity;
+using ArtemisBank.Infrastructure.Persistence.IoC;
+using ArtemisBank.Infrastructure.Shared.IoC;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddApplicationLayer();
+builder.Services.AddIdentityInfrastructure(builder.Configuration);
+builder.Services.AddPersistenceInfrastructure(builder.Configuration);
+builder.Services.AddSharedInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
@@ -16,6 +25,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

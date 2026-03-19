@@ -1,0 +1,276 @@
+using ArtemisBank.Core.Application.DTOs.Transaction;
+using ArtemisBank.Core.Application.Interfaces.IServices;
+using ArtemisBank.ViewModels.Transaction;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace ArtemisBank.Controllers
+{
+    [Authorize(Roles = "Client")]
+    public class TransactionController : Controller
+    {
+        private readonly ITransactionService _transactionService;
+        private readonly ISavingsAccountService _savingsAccountService;
+        private readonly ICreditCardService _creditCardService;
+        private readonly ILoanService _loanService;
+        private readonly IBeneficiaryService _beneficiaryService;
+
+        public TransactionController(
+            ITransactionService transactionService,
+            ISavingsAccountService savingsAccountService,
+            ICreditCardService creditCardService,
+            ILoanService loanService,
+            IBeneficiaryService beneficiaryService)
+        {
+            _transactionService = transactionService;
+            _savingsAccountService = savingsAccountService;
+            _creditCardService = creditCardService;
+            _loanService = loanService;
+            _beneficiaryService = beneficiaryService;
+        }
+
+        private string GetClientId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        #region Transfer
+
+        [HttpGet]
+        public async Task<IActionResult> Transfer()
+        {
+            var clientId = GetClientId();
+            var vm = new TransferViewModel
+            {
+                UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId)
+            };
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Transfer(TransferViewModel vm)
+        {
+            var clientId = GetClientId();
+
+            if (!ModelState.IsValid)
+            {
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                return View(vm);
+            }
+
+            try
+            {
+                await _transactionService.TransferAsync(new TransferDto
+                {
+                    SourceAccountNumber = vm.SourceAccountNumber,
+                    DestinationAccountNumber = vm.DestinationAccountNumber,
+                    Amount = vm.Amount
+                });
+
+                return RedirectToAction("Index", "Client");
+            }
+            catch (Exception ex)
+            {
+                vm.HasError = true;
+                vm.Error = ex.Message;
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                return View(vm);
+            }
+        }
+
+        #endregion
+
+        #region Express Payment
+
+        [HttpGet]
+        public async Task<IActionResult> ExpressPayment()
+        {
+            var clientId = GetClientId();
+            var vm = new ExpressPaymentViewModel
+            {
+                UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId)
+            };
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ExpressPayment(ExpressPaymentViewModel vm)
+        {
+            var clientId = GetClientId();
+
+            if (!ModelState.IsValid)
+            {
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                return View(vm);
+            }
+
+            try
+            {
+                await _transactionService.PayExpressAsync(new PaymentDto
+                {
+                    SourceAccountNumber = vm.SourceAccountNumber,
+                    DestinationAccountNumber = vm.DestinationAccountNumber,
+                    Amount = vm.Amount
+                });
+
+                return RedirectToAction("Index", "Client");
+            }
+            catch (Exception ex)
+            {
+                vm.HasError = true;
+                vm.Error = ex.Message;
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                return View(vm);
+            }
+        }
+
+        #endregion
+
+        #region Credit Card Payment
+
+        [HttpGet]
+        public async Task<IActionResult> CreditCardPayment()
+        {
+            var clientId = GetClientId();
+            var vm = new CreditCardPaymentViewModel
+            {
+                UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId),
+                UserCreditCards = await _creditCardService.GetActiveByClientIdAsync(clientId)
+            };
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreditCardPayment(CreditCardPaymentViewModel vm)
+        {
+            var clientId = GetClientId();
+
+            if (!ModelState.IsValid)
+            {
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                vm.UserCreditCards = await _creditCardService.GetActiveByClientIdAsync(clientId);
+                return View(vm);
+            }
+
+            try
+            {
+                await _transactionService.PayCreditCardAsync(new PaymentDto
+                {
+                    SourceAccountNumber = vm.SourceAccountNumber,
+                    DestinationAccountNumber = vm.CreditCardNumber,
+                    Amount = vm.Amount
+                });
+
+                return RedirectToAction("Index", "Client");
+            }
+            catch (Exception ex)
+            {
+                vm.HasError = true;
+                vm.Error = ex.Message;
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                vm.UserCreditCards = await _creditCardService.GetActiveByClientIdAsync(clientId);
+                return View(vm);
+            }
+        }
+
+        #endregion
+
+        #region Loan Payment
+
+        [HttpGet]
+        public async Task<IActionResult> LoanPayment()
+        {
+            var clientId = GetClientId();
+            var vm = new LoanPaymentViewModel
+            {
+                UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId),
+                UserLoans = await _loanService.GetActiveByClientIdAsync(clientId)
+            };
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LoanPayment(LoanPaymentViewModel vm)
+        {
+            var clientId = GetClientId();
+
+            if (!ModelState.IsValid)
+            {
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                vm.UserLoans = await _loanService.GetActiveByClientIdAsync(clientId);
+                return View(vm);
+            }
+
+            try
+            {
+                await _transactionService.PayLoanAsync(new PaymentDto
+                {
+                    SourceAccountNumber = vm.SourceAccountNumber,
+                    DestinationAccountNumber = vm.LoanNumber,
+                    Amount = vm.Amount
+                });
+
+                return RedirectToAction("Index", "Client");
+            }
+            catch (Exception ex)
+            {
+                vm.HasError = true;
+                vm.Error = ex.Message;
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                vm.UserLoans = await _loanService.GetActiveByClientIdAsync(clientId);
+                return View(vm);
+            }
+        }
+
+        #endregion
+
+        #region Beneficiary Payment
+
+        [HttpGet]
+        public async Task<IActionResult> BeneficiaryPayment()
+        {
+            var clientId = GetClientId();
+            var vm = new BeneficiaryPaymentViewModel
+            {
+                UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId),
+                Beneficiaries = await _beneficiaryService.GetByOwnerIdAsync(clientId)
+            };
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BeneficiaryPayment(BeneficiaryPaymentViewModel vm)
+        {
+            var clientId = GetClientId();
+
+            if (!ModelState.IsValid)
+            {
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                vm.Beneficiaries = await _beneficiaryService.GetByOwnerIdAsync(clientId);
+                return View(vm);
+            }
+
+            try
+            {
+                var beneficiary = await _beneficiaryService.GetByIdAsync(vm.BeneficiaryId);
+
+                await _transactionService.PayExpressAsync(new PaymentDto
+                {
+                    SourceAccountNumber = vm.SourceAccountNumber,
+                    DestinationAccountNumber = beneficiary.AccountNumber,
+                    Amount = vm.Amount
+                });
+
+                return RedirectToAction("Index", "Client");
+            }
+            catch (Exception ex)
+            {
+                vm.HasError = true;
+                vm.Error = ex.Message;
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                vm.Beneficiaries = await _beneficiaryService.GetByOwnerIdAsync(clientId);
+                return View(vm);
+            }
+        }
+
+        #endregion
+    }
+}
