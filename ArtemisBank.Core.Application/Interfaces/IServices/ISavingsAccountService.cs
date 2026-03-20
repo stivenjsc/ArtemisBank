@@ -28,6 +28,5 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         Task<IEnumerable<TransactionDto>> GetTransactionsAsync(string accountNumber);
         Task AssignSecondaryAsync(AssignSavingsAccountDto dto);
         Task CancelAsync(string accountNumber);
-        Task GetByAccountNumberAsync(object accountNumber);
     }
 }

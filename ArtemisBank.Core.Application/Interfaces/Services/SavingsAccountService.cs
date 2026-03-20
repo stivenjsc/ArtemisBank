@@ -197,7 +197,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 var transaction = new Transaction
                 {
                     Amount = dto.InitialBalance,
-                    Type = TransactionType.Deposit,
+                    Type = TransactionType.Credit,
                     DestinationAccountNumber = accountNumber,
                     SourceAccountNumber = "SYSTEM",
                     Description = "Initial deposit for secondary account opening",
@@ -229,7 +229,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 var transfer = new Transaction
                 {
                     Amount = balanceToTransfer,
-                    Type = TransactionType.Transfer,
+                    Type = TransactionType.Debit,
                     SourceAccountNumber = secondaryAccount.AccountNumber,
                     DestinationAccountNumber = primaryAccount.AccountNumber,
                     Description = "Closure of secondary account - Balance transferred to primary",
@@ -242,5 +242,6 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             secondaryAccount.Status = AccountStatus.Closed;
             await _repo.UpdateAsync(secondaryAccount);
         }
+
     }
 }

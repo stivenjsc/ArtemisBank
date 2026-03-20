@@ -58,7 +58,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
                 Role = role
             };
         }
-        public async Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, string role)
+        public async Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, string role, decimal initialAmount = 0)
         {
             var existingUser = await _userManager.FindByNameAsync(username);
             if (existingUser != null) return false;
