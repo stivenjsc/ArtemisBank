@@ -11,5 +11,7 @@ namespace ArtemisBank.Core.Application.DTOs.SavingsAccount
         public AccountStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public string UserId { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public string OwnerFullName { get; set; } = string.Empty;
     }
 }

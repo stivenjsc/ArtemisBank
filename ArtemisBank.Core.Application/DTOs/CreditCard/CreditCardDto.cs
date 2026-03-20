@@ -12,5 +12,6 @@ namespace ArtemisBank.Core.Application.DTOs.CreditCard
         public CardStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public string ClientId { get; set; } = string.Empty;
+        public string ClientFullName { get; set; } = string.Empty;
     }
 }

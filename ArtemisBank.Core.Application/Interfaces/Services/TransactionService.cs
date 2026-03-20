@@ -1,24 +1,29 @@
-using AutoMapper;
+using ArtemisBank.Core.Application.DTOs.Account;
+using ArtemisBank.Core.Application.DTOs.Cashier;
 using ArtemisBank.Core.Application.DTOs.Transaction;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Entities;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Domain.Interfaces;
+using AutoMapper;
+using System.Transactions;
+using Transaction = ArtemisBank.Core.Domain.Entities.Transaction;
+using TransactionStatus = ArtemisBank.Core.Domain.Enums.TransactionStatus;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class TransactionService : ITransactionService
+    public class TransactionService(ITransactionRepository repo, ISavingsAccountRepository accountRepo, 
+        IMapper mapper, IUserService user, IEmailService email, ICreditCardRepository creditCard, ILoanRepository loanrepo, 
+        ILoanInstallmentRepository installment) : ITransactionService
     {
-        private readonly ITransactionRepository _repo;
-        private readonly ISavingsAccountRepository _accountRepo;
-        private readonly IMapper _mapper;
-
-        public TransactionService(ITransactionRepository repo, ISavingsAccountRepository accountRepo, IMapper mapper)
-        {
-            _repo = repo;
-            _accountRepo = accountRepo;
-            _mapper = mapper;
-        }
+        private readonly ITransactionRepository _repo = repo;
+        private readonly ISavingsAccountRepository _accountRepo = accountRepo;
+        private readonly IMapper _mapper = mapper;
+        private readonly IUserService _userService = user;
+        private readonly IEmailService _emailService = email;
+        private readonly ICreditCardRepository _creditCardRepo = creditCard;
+        private readonly ILoanRepository _loanRepo = loanrepo;
+        private readonly ILoanInstallmentRepository _installmentRepo = installment;
 
         public async Task<TransactionDto> GetByIdAsync(int id)
         {
@@ -178,6 +183,229 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         public async Task<int> GetTotalPaymentsCountAsync()
         {
             return await _repo.GetTotalPaymentsCountAsync();
+        }
+
+        public async Task DepositAsync(CashierDepositDto cashierDepositDto)
+        {
+            var account = await _accountRepo.GetByAccountNumberAsync(cashierDepositDto.AccountNumber);
+            if (account == null)
+                throw new Exception("The destination account does not exist.");
+
+            if (account.Status != AccountStatus.Active)
+                throw new InvalidOperationException("Cannot deposit into an inactive or cancelled account.");
+            account.Balance += cashierDepositDto.Amount;
+            await _accountRepo.UpdateAsync(account);
+
+            var transaction = new Transaction
+            {
+                Amount = cashierDepositDto.Amount,
+                Type = TransactionType.Credit,
+                DestinationAccountNumber = cashierDepositDto.AccountNumber,
+                SourceAccountNumber = "CASHIER",
+                Description = "Cash deposit made at branch",
+                CreatedAt = DateTime.UtcNow
+            };
+            await _repo.AddAsync(transaction);
+            var user = await _userService.GetByIdAsync(account.UserId);
+            if (user != null)
+            {
+                try
+                {
+                    await _emailService.SendAsync(user.Email, "Deposit Received",
+                        $"A deposit of {cashierDepositDto.Amount:C2} has been credited to your account {cashierDepositDto.AccountNumber}.");
+                }
+                catch { /*Login error via email but cannot reverse deposit */ }
+            }
+        }
+
+        public async Task WithdrawAsync(CashierWithdrawalDto dto)
+        {
+            var account = await _accountRepo.GetByAccountNumberAsync(dto.AccountNumber);
+
+            if (account == null)
+                throw new Exception("The source account does not exist.");
+
+            if (account.Status != AccountStatus.Active)
+                throw new InvalidOperationException("Cannot withdraw from an inactive or cancelled account.");
+            if (account.Balance < dto.Amount)
+            {
+                throw new InvalidOperationException($"Insufficient funds. Current balance: ${account.Balance:N2}");
+            }
+
+            account.Balance -= dto.Amount;
+            await _accountRepo.UpdateAsync(account);
+            var transaction = new Transaction
+            {
+                Amount = dto.Amount,
+                Type = TransactionType.Debit,
+                SourceAccountNumber = dto.AccountNumber,
+                DestinationAccountNumber = "CASHIER",
+                Description = "Cash withdrawal made at branch",
+                CreatedAt = DateTime.UtcNow
+            };
+            await _repo.AddAsync(transaction);
+
+            var user = await _userService.GetByIdAsync(account.UserId);
+            if (user != null)
+            {
+                try
+                {
+                    await _emailService.SendAsync(user.Email, "Withdrawal Notification",
+                        $"A withdrawal of {dto.Amount:C2} has been processed from your account {dto.AccountNumber}.");
+                }
+                catch { /* Ignore email error to avoid breaking the transaction*/ }
+            }
+        }
+
+        public async Task CashierPayCreditCardAsync(CashierPayCreditCardDto dto)
+        {
+            var card = await _creditCardRepo.GetByCardNumberAsync(dto.CardNumber);
+            if (card == null)
+                throw new Exception("Credit card not found.");
+
+            if (card.Status != CardStatus.Active)
+                throw new InvalidOperationException("Cannot process payments for an inactive or cancelled card.");
+
+            decimal currentDebt = card.CreditLimit - card.AvailableBalance;
+            card.AvailableBalance += dto.Amount;
+            await _creditCardRepo.UpdateAsync(card);
+
+            var transaction = new Transaction
+            {
+                Amount = dto.Amount,
+                Type = TransactionType.Credit,
+                DestinationAccountNumber = dto.CardNumber,
+                SourceAccountNumber = "CASHIER",
+                Description = "Credit card payment made at branch (Cash)",
+                CreatedAt = DateTime.UtcNow
+            };
+            await _repo.AddAsync(transaction);
+
+            var user = await _userService.GetByIdAsync(card.ClientId);
+            if (user != null)
+            {
+                try
+                {
+                    await _emailService.SendAsync(user.Email, "Credit Card Payment Received",
+                        $"A payment of {dto.Amount:C2} has been applied to your card ending in {card.CardNumber.Substring(card.CardNumber.Length - 4)}.");
+                }
+                catch { /* Ignore email error*/ }
+            }
+        }
+
+        public async Task CashierPayLoanAsync(CashierPayLoanDto Dto)
+        {
+            var account = await _accountRepo.GetByAccountNumberAsync(Dto.SourceAccountNumber);
+            var loan = await _loanRepo.GetByLoanNumberAsync(Dto.LoanNumber);
+
+            if (account == null || loan == null) throw new Exception("Account or Loan not found.");
+            if (account.Balance < Dto.Amount) throw new InvalidOperationException("Insufficient funds in the source account.");
+
+            var installments = (await _installmentRepo.GetByLoanIdAsync(loan.Id))
+                .Where(i => i.Status != InstallmentStatus.Paid).OrderBy(i => i.DueDate).ToList();
+
+            decimal remainingPayment = Dto.Amount;
+            decimal totalActuallyPaid = 0;
+            foreach (var installment in installments)
+            {
+                if (remainingPayment <= 0) break;
+
+                decimal amountNeeded = installment.InstallmentAmount - installment.AmountPaid;
+                decimal paymentForThisInstallment = Math.Min(remainingPayment, amountNeeded);
+
+                installment.AmountPaid += paymentForThisInstallment;
+                remainingPayment -= paymentForThisInstallment;
+                totalActuallyPaid += paymentForThisInstallment;
+
+                if (installment.AmountPaid >= installment.InstallmentAmount)
+                {
+                    installment.Status = InstallmentStatus.Paid;
+                }
+
+                await _installmentRepo.UpdateAsync(installment);
+            }
+            account.Balance -= totalActuallyPaid;
+            await _accountRepo.UpdateAsync(account);
+
+            var stillPending = (await _installmentRepo.GetByLoanIdAsync(loan.Id))
+                        .Any(i => i.Status != InstallmentStatus.Paid);
+
+            if (!stillPending)
+            {
+                loan.Status = LoanStatus.Completed;
+                await _loanRepo.UpdateAsync(loan);
+            }
+            await _repo.AddAsync(new Transaction
+            {
+                Amount = totalActuallyPaid,
+                Type = TransactionType.Debit,
+                SourceAccountNumber = Dto.SourceAccountNumber,
+                DestinationAccountNumber = Dto.LoanNumber,
+                Description = $"Loan payment applied to {loan.LoanNumber}",
+                CreatedAt = DateTime.UtcNow
+            });
+            var user = await _userService.GetByIdAsync(loan.UserId);
+            await _emailService.SendAsync(user.Email, "Loan Payment Applied",
+                $"A payment of {totalActuallyPaid:C2} was applied to your loan {loan.LoanNumber}.");
+        }
+
+        public async Task CashierTransferAsync(CashierTransferDto dto)
+        {
+            using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+
+            var sourceAccount = await _accountRepo.GetByAccountNumberAsync(dto.SourceAccountNumber);
+            var destAccount = await _accountRepo.GetByAccountNumberAsync(dto.DestinationAccountNumber);
+            try
+            {
+                if (sourceAccount == null || destAccount == null)
+                    throw new Exception("One or both accounts were not found.");
+                if (sourceAccount.Balance < dto.Amount)
+                    throw new InvalidOperationException("Insufficient funds in the source account.");
+                sourceAccount.Balance -= dto.Amount;
+                destAccount.Balance += dto.Amount;
+
+                await _accountRepo.UpdateAsync(sourceAccount);
+                await _accountRepo.UpdateAsync(destAccount);
+
+                await _repo.AddAsync(new Transaction
+                {
+                    Amount = dto.Amount,
+                    Type = TransactionType.Debit,
+                    SourceAccountNumber = dto.SourceAccountNumber,
+                    DestinationAccountNumber = dto.DestinationAccountNumber,
+                    Description = $"Transfer to {dto.DestinationAccountNumber}",
+                    CreatedAt = DateTime.UtcNow
+                });
+                await _repo.AddAsync(new Transaction
+                {
+                    Amount = dto.Amount,
+                    Type = TransactionType.Credit,
+                    SourceAccountNumber = dto.SourceAccountNumber,
+                    DestinationAccountNumber = dto.DestinationAccountNumber,
+                    Description = $"Transfer from {dto.SourceAccountNumber}",
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                transactionScope.Complete();
+            }
+            catch (Exception ex) 
+            {
+                throw new Exception("Transfer failed: " + ex.Message);
+            }
+            var sourceUser = await _userService.GetByIdAsync(sourceAccount.UserId);
+            var destUser = await _userService.GetByIdAsync(destAccount.UserId);
+
+            if (sourceUser != null)
+            {
+                await _emailService.SendAsync(sourceUser.Email, "Transfer Sent",
+                    $"You have sent {dto.Amount:C2} to account {dto.DestinationAccountNumber}.");
+            }
+
+            if (destUser != null)
+            {
+                await _emailService.SendAsync(destUser.Email, "Transfer Received",
+                    $"You have received {dto.Amount:C2} from account {dto.SourceAccountNumber}.");
+            }
         }
     }
 }

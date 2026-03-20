@@ -1,3 +1,4 @@
+using ArtemisBank.Core.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace ArtemisBank.Core.Application.ViewModels.User
@@ -40,5 +41,6 @@ namespace ArtemisBank.Core.Application.ViewModels.User
 
         public bool HasError { get; set; }
         public string? Error { get; set; }
+        public UserRole Role { get; set; }
     }
 }

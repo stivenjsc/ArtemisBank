@@ -17,5 +17,9 @@ namespace ArtemisBank.Core.Domain.Entities
         // Navigation properties
         public int SavingAccountId { get; set; }
         public SavingsAccount SavingsAccount { get; set; } = null!;
+        public string SourceAccountNumber { get; set; } = string.Empty;
+        public string DestinationAccountNumber { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public string Description { get; set; }
     }
 }

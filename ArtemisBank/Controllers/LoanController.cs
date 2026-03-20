@@ -1,5 +1,7 @@
 using ArtemisBank.Core.Application.DTOs.Loan;
+using ArtemisBank.Core.Application.ViewModels.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
+using ArtemisBank.Core.Application.ViewModels.Client;
 using ArtemisBank.Core.Application.ViewModels.Loan;
 using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -8,18 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = nameof(UserRole.Admin))]
-    public class LoanController : Controller
+    public class LoanController(ILoanService loanService, ILoanInstallmentService installmentService, IUserService userService) : Controller
     {
-        private readonly ILoanService _loanService;
-        private readonly ILoanInstallmentService _installmentService;
-        private readonly IUserService _userService;
-
-        public LoanController(ILoanService loanService, ILoanInstallmentService installmentService, IUserService userService)
-        {
-            _loanService = loanService;
-            _installmentService = installmentService;
-            _userService = userService;
-        }
+        private readonly ILoanService _loanService = loanService;
+        private readonly ILoanInstallmentService _installmentService = installmentService;
+        private readonly IUserService _userService = userService;
 
         #region List
 
@@ -60,53 +55,75 @@ namespace ArtemisBank.Controllers
 
         #region Step 1 - Select Client
 
-        [HttpGet]
-        public IActionResult SelectClient()
+        public async Task<IActionResult> SelectClient(string? cedula = null)
         {
-            return View();
+            var averageDebt = await _loanService.GetAverageDebtAsync();
+            var clients = await _userService.GetActiveClientsWithoutLoanAsync(cedula);
+
+            var vm = new SelectClientViewModel
+            {
+                AverageDebt = averageDebt,
+                Clients = (IEnumerable<SaveUserViewModel>)clients,
+                CurrentCedula = cedula
+            };
+
+            return View(vm);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SelectClient(string clientId)
+        public async Task<IActionResult> SelectClient(SelectClientViewModel vm)
         {
-            if (string.IsNullOrWhiteSpace(clientId))
+            if (string.IsNullOrWhiteSpace(vm.SelectedClientId))
             {
-                ViewBag.Error = "Debe ingresar el ID del cliente.";
-                return View();
+                vm.Clients = (IEnumerable<SaveUserViewModel>)await _userService.GetActiveClientsWithoutLoanAsync(vm.CurrentCedula);
+                ViewBag.Error = "Please select a client.";
+                return View(vm);
             }
 
-            var client = await _userService.GetByIdAsync(clientId);
+            var client = await _userService.GetByIdAsync(vm.SelectedClientId);
             if (client == null)
             {
-                ViewBag.Error = "Cliente no encontrado.";
-                return View();
+                return NotFound();
             }
 
-            var hasActiveLoan = await _loanService.ClientHasActiveLoanAsync(clientId);
+            var hasActiveLoan = await _loanService.ClientHasActiveLoanAsync(vm.SelectedClientId);
 
-            var vm = new AssignLoanViewModel
+            var assignVm = new AssignLoanViewModel
             {
-                ClientId = clientId,
+                ClientId = vm.SelectedClientId,
                 ClientName = $"{client.FirstName} {client.LastName}",
                 IsHighRisk = hasActiveLoan
             };
 
-            return View("Assign", vm);
+            return View("Assign", assignVm);
         }
 
         #endregion
 
         #region Step 2 - Assign Loan
 
-        [HttpGet]
-        public IActionResult Assign(string clientId, string clientName, bool isHighRisk = false)
+        public async Task<IActionResult> Assign(string clientId, string clientName, bool isHighRisk = false)
         {
+            clientId = TempData["SelectedClientId"]?.ToString()!;
+
+            if (string.IsNullOrEmpty(clientId)) return RedirectToAction("SelectClient");
+
+            TempData.Keep("SelectedClientId");
+
+            var client = await _userService.GetByIdAsync(clientId);
+            if (client == null) return NotFound();
+
+            var averageDebt = await _loanService.GetAverageDebtAsync();
+            var currentDebt = await _loanService.GetTotalDebtByClientIdAsync(clientId);
+
             var vm = new AssignLoanViewModel
             {
                 ClientId = clientId,
                 ClientName = clientName,
-                IsHighRisk = isHighRisk
+                AverageDebt = averageDebt,
+                CurrentDebt = currentDebt,
+                IsHighRisk = currentDebt > averageDebt
             };
             return View(vm);
         }
@@ -115,11 +132,19 @@ namespace ArtemisBank.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Assign(AssignLoanViewModel vm)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(vm);
+            var riskInfo = await _loanService.EvaluateRiskAsync(vm.ClientId, vm.Amount, vm.AnnualInterestRate, vm.TermInMonths);
+            if (riskInfo.IsHighRisk && !vm.IsHighRisk)
             {
+                vm.IsHighRisk = true;
+                vm.AverageDebt = riskInfo.AverageDebt;
+                vm.CurrentDebt = riskInfo.CurrentDebt;
+
+                vm.RiskMessage = riskInfo.CurrentDebt > riskInfo.AverageDebt ? "High Risk: The client's current debt already exceeds the bank average."
+                    : "High Risk: This new loan will push the client's total debt above the bank average.";
+
                 return View(vm);
             }
-
             try
             {
                 await _loanService.AssignAsync(new AssignLoanDto
@@ -130,12 +155,15 @@ namespace ArtemisBank.Controllers
                     TermInMonths = vm.TermInMonths
                 });
 
+                TempData["Success"] = "Loan has been successfully assigned.";
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
                 vm.HasError = true;
                 vm.Error = ex.Message;
+                vm.AverageDebt = riskInfo.AverageDebt;
+                vm.CurrentDebt = riskInfo.CurrentDebt;
                 return View(vm);
             }
         }
@@ -144,7 +172,6 @@ namespace ArtemisBank.Controllers
 
         #region Edit Interest Rate
 
-        [HttpGet]
         public async Task<IActionResult> EditRate(int id)
         {
             var loan = await _loanService.GetByIdAsync(id);
@@ -172,6 +199,8 @@ namespace ArtemisBank.Controllers
 
             try
             {
+                await _loanService.UpdateInterestRateAsync(vm.LoanId, vm.NewAnnualInterestRate);
+                TempData["Success"] = "Rate updated. Future installments were recalculated and the client was notified.";
                 return RedirectToAction("Detail", new { id = vm.LoanId });
             }
             catch (Exception ex)

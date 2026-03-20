@@ -19,5 +19,7 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
 
         Task<decimal> GetTotalDebtByClientIdAsync(string clientId);
         Task<int> GetTotalActiveCardsCountAsync();
+        Task UpdateLimitAsync(int cardId, decimal newCreditLimit);
+        Task CancelAsync(int cardId);
     }
 }

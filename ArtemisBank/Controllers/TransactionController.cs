@@ -9,33 +9,23 @@ using System.Security.Claims;
 namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = nameof(UserRole.Client))]
-    public class TransactionController : Controller
+    public class TransactionController(
+        ITransactionService transactionService,
+        ISavingsAccountService savingsAccountService,
+        ICreditCardService creditCardService,
+        ILoanService loanService,
+        IBeneficiaryService beneficiaryService) : Controller
     {
-        private readonly ITransactionService _transactionService;
-        private readonly ISavingsAccountService _savingsAccountService;
-        private readonly ICreditCardService _creditCardService;
-        private readonly ILoanService _loanService;
-        private readonly IBeneficiaryService _beneficiaryService;
-
-        public TransactionController(
-            ITransactionService transactionService,
-            ISavingsAccountService savingsAccountService,
-            ICreditCardService creditCardService,
-            ILoanService loanService,
-            IBeneficiaryService beneficiaryService)
-        {
-            _transactionService = transactionService;
-            _savingsAccountService = savingsAccountService;
-            _creditCardService = creditCardService;
-            _loanService = loanService;
-            _beneficiaryService = beneficiaryService;
-        }
+        private readonly ITransactionService _transactionService = transactionService;
+        private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
+        private readonly ICreditCardService _creditCardService = creditCardService;
+        private readonly ILoanService _loanService = loanService;
+        private readonly IBeneficiaryService _beneficiaryService = beneficiaryService;
 
         private string GetClientId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
         #region Transfer
 
-        [HttpGet]
         public async Task<IActionResult> Transfer()
         {
             var clientId = GetClientId();
@@ -82,7 +72,6 @@ namespace ArtemisBank.Controllers
 
         #region Express Payment
 
-        [HttpGet]
         public async Task<IActionResult> ExpressPayment()
         {
             var clientId = GetClientId();
@@ -129,7 +118,6 @@ namespace ArtemisBank.Controllers
 
         #region Credit Card Payment
 
-        [HttpGet]
         public async Task<IActionResult> CreditCardPayment()
         {
             var clientId = GetClientId();
@@ -179,7 +167,6 @@ namespace ArtemisBank.Controllers
 
         #region Loan Payment
 
-        [HttpGet]
         public async Task<IActionResult> LoanPayment()
         {
             var clientId = GetClientId();
@@ -229,7 +216,6 @@ namespace ArtemisBank.Controllers
 
         #region Beneficiary Payment
 
-        [HttpGet]
         public async Task<IActionResult> BeneficiaryPayment()
         {
             var clientId = GetClientId();
@@ -258,7 +244,7 @@ namespace ArtemisBank.Controllers
             {
                 var beneficiary = await _beneficiaryService.GetByIdAsync(vm.BeneficiaryId);
 
-                if (beneficiary.OwnerId != clientId)
+                if (beneficiary == null || beneficiary.OwnerId != clientId)
                 {
                     return Forbid();
                 }

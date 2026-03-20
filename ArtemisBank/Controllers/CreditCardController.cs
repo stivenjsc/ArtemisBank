@@ -9,21 +9,14 @@ using System.Security.Claims;
 namespace ArtemisBank.Controllers
 {
     [Authorize]
-    public class CreditCardController : Controller
+    public class CreditCardController(
+        ICreditCardService creditCardService,
+        ISavingsAccountService savingsAccountService,
+        ICreditCardConsumptionService consumptionService) : Controller
     {
-        private readonly ICreditCardService _creditCardService;
-        private readonly ISavingsAccountService _savingsAccountService;
-        private readonly ICreditCardConsumptionService _consumptionService;
-
-        public CreditCardController(
-            ICreditCardService creditCardService,
-            ISavingsAccountService savingsAccountService,
-            ICreditCardConsumptionService consumptionService)
-        {
-            _creditCardService = creditCardService;
-            _savingsAccountService = savingsAccountService;
-            _consumptionService = consumptionService;
-        }
+        private readonly ICreditCardService _creditCardService = creditCardService;
+        private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
+        private readonly ICreditCardConsumptionService _consumptionService = consumptionService;
 
         #region Admin - List
 
@@ -62,7 +55,6 @@ namespace ArtemisBank.Controllers
         #region Admin - Assign Credit Card
 
         [Authorize(Roles = nameof(UserRole.Admin))]
-        [HttpGet]
         public IActionResult Assign()
         {
             return View(new AssignCreditCardViewModel());
@@ -101,7 +93,6 @@ namespace ArtemisBank.Controllers
         #region Admin - Edit Credit Limit
 
         [Authorize(Roles = nameof(UserRole.Admin))]
-        [HttpGet]
         public async Task<IActionResult> EditLimit(int id)
         {
             var card = await _creditCardService.GetByIdAsync(id);
@@ -131,11 +122,8 @@ namespace ArtemisBank.Controllers
 
             try
             {
-                var card = await _creditCardService.GetByIdAsync(vm.CardId);
-                if (card == null) return NotFound();
-
-                card.CreditLimit = vm.NewCreditLimit;
-
+                await _creditCardService.UpdateLimitAsync(vm.CardId, vm.NewCreditLimit);
+                TempData["Success"] = "Limit updated. Client notified by email.";
                 return RedirectToAction("Detail", new { id = vm.CardId });
             }
             catch (Exception ex)
@@ -151,12 +139,39 @@ namespace ArtemisBank.Controllers
         #region Admin - Cancel Card
 
         [Authorize(Roles = nameof(UserRole.Admin))]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id)
         {
-            await _creditCardService.ChangeStatusAsync(id, CardStatus.Inactive);
-            return RedirectToAction("Index");
+            var card = await _creditCardService.GetByIdAsync(id);
+            if (card == null) return NotFound();
+
+            var vm = new CancelCreditCardViewModel
+            {
+                CardId = card.Id,
+                LastFourDigits = card.CardNumber.Substring(12),
+                AmountOwed = card.AmountOwed
+            };
+
+            return View(vm);
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(CancelCreditCardViewModel vm)
+        {
+            try
+            {
+                await _creditCardService.CancelAsync(vm.CardId);
+
+                TempData["Success"] = "Tarjeta cancelada correctamente.";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                vm.HasError = true;
+                vm.Error = ex.Message;
+                return View(vm);
+            }
         }
 
         #endregion
@@ -164,7 +179,6 @@ namespace ArtemisBank.Controllers
         #region Client - Cash Advance
 
         [Authorize(Roles = nameof(UserRole.Client))]
-        [HttpGet]
         public async Task<IActionResult> CashAdvance()
         {
             var clientId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -198,7 +212,7 @@ namespace ArtemisBank.Controllers
                     SavingsAccountId = vm.SavingsAccountId,
                     Amount = vm.Amount
                 });
-
+                TempData["Success"] = "Cash advance made. Notified by mail.";
                 return RedirectToAction("Index", "Client");
             }
             catch (Exception ex)

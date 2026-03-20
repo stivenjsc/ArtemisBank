@@ -6,5 +6,6 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
     {
         Task<DashboardAdminDto> GetAdminDashboardAsync();
         Task<DashboardClientDto> GetClientDashboardAsync(string clientId);
+        Task<DashboardCashierDto> GetCashierDashboardAsync(string cashierId);
     }
 }

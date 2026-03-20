@@ -18,5 +18,7 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         Task<decimal> GetTotalDebtByClientIdAsync(string clientId);
         Task<decimal> GetAverageDebtAsync();
         Task<int> GetTotalActiveLoansCountAsync();
+        Task<(bool IsHighRisk, decimal AverageDebt, decimal CurrentDebt)> EvaluateRiskAsync(string clientId, decimal amount, decimal rate, int months);
+        Task UpdateInterestRateAsync(int loanId, decimal newAnnualInterestRate);
     }
 }

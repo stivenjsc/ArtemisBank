@@ -1,3 +1,5 @@
+using ArtemisBank.Core.Application.DTOs.Account;
+using ArtemisBank.Core.Application.DTOs.Cashier;
 using ArtemisBank.Core.Application.DTOs.Transaction;
 
 namespace ArtemisBank.Core.Application.Interfaces.IServices
@@ -16,5 +18,10 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         Task<int> GetTotalTransactionsCountAsync();
         Task<int> GetTodayPaymentsCountAsync();
         Task<int> GetTotalPaymentsCountAsync();
+        Task DepositAsync(CashierDepositDto cashierDepositDto);
+        Task WithdrawAsync(CashierWithdrawalDto dto);
+        Task CashierPayCreditCardAsync(CashierPayCreditCardDto dto);
+        Task CashierPayLoanAsync(CashierPayLoanDto Dto);
+        Task CashierTransferAsync(CashierTransferDto dto);
     }
 }

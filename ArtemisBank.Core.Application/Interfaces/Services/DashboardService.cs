@@ -8,41 +8,38 @@ using ArtemisBank.Core.Domain.Interfaces;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class DashboardService : IDashboardService
+    public class DashboardService( ITransactionRepository transactionRepo, ISavingsAccountRepository accountRepo, ICreditCardRepository cardRepo,
+        ILoanRepository loanRepo,
+        IUserService userService,
+        IMapper mapper) : IDashboardService
     {
-        private readonly ITransactionRepository _transactionRepo;
-        private readonly ISavingsAccountRepository _accountRepo;
-        private readonly ICreditCardRepository _cardRepo;
-        private readonly ILoanRepository _loanRepo;
-        private readonly IMapper _mapper;
-
-        public DashboardService(
-            ITransactionRepository transactionRepo,
-            ISavingsAccountRepository accountRepo,
-            ICreditCardRepository cardRepo,
-            ILoanRepository loanRepo,
-            IMapper mapper)
-        {
-            _transactionRepo = transactionRepo;
-            _accountRepo = accountRepo;
-            _cardRepo = cardRepo;
-            _loanRepo = loanRepo;
-            _mapper = mapper;
-        }
+        private readonly ITransactionRepository _transactionRepo = transactionRepo;
+        private readonly ISavingsAccountRepository _accountRepo = accountRepo;
+        private readonly ICreditCardRepository _cardRepo = cardRepo;
+        private readonly ILoanRepository _loanRepo = loanRepo;
+        private readonly IUserService _userService = userService;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<DashboardAdminDto> GetAdminDashboardAsync()
         {
+            var activeAccounts = await _accountRepo.GetTotalActiveAccountsCountAsync();
+            var activeCards = await _cardRepo.GetTotalActiveCardsCountAsync();
+            var activeLoans = await _loanRepo.GetTotalActiveLoansCountAsync();
+            var activeClients = await _userService.GetActiveClientsCountAsync();
+            var inactiveClients = await _userService.GetInactiveClientsCountAsync();
             return new DashboardAdminDto
             {
                 TotalTransactions = await _transactionRepo.GetTotalTransactionsCountAsync(),
-                TotalActiveTransactions = await _transactionRepo.GetTodayTransactionsCountAsync(),
-                TotalInactiveTransactions = 0,
-                TotalDailyPayments = await _transactionRepo.GetTodayPaymentsCountAsync(),
-                TotalAssignedProducts = await _accountRepo.GetTotalActiveAccountsCountAsync()
-                    + await _cardRepo.GetTotalActiveCardsCountAsync()
-                    + await _loanRepo.GetTotalActiveLoansCountAsync(),
-                TotalActiveClients = 0,
-                TotalInactiveClients = 0
+                TodayTransactions = await _transactionRepo.GetTodayTransactionsCountAsync(),
+                TodayPayments = await _transactionRepo.GetTodayPaymentsCountAsync(),
+                TotalPayments = await _transactionRepo.GetTotalPaymentsCountAsync(),
+                ActiveClients = activeClients,
+                InactiveClients = inactiveClients,
+                TotalProducts = activeAccounts + activeCards + activeLoans,
+                ActiveLoans = activeLoans,
+                ActiveCreditCards = activeCards,
+                TotalSavingsAccounts = activeAccounts,
+                AverageDebt = await _loanRepo.GetAverageDebtAsync()
             };
         }
 
@@ -60,6 +57,17 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 SavingsAccounts = _mapper.Map<IEnumerable<SavingsAccountDto>>(accounts),
                 CreditCards = _mapper.Map<IEnumerable<CreditCardDto>>(cards),
                 Loans = _mapper.Map<IEnumerable<LoanDto>>(loans)
+            };
+        }
+
+        public async Task<DashboardCashierDto> GetCashierDashboardAsync(string cashierId)
+        {
+            return new DashboardCashierDto
+            {
+                TodayTransactions = await _transactionRepo.GetTodayTransactionsByUserIdCountAsync(cashierId),
+                TodayPayments = await _transactionRepo.GetTodayPaymentsByUserIdCountAsync(cashierId),
+                TodayDeposits = await _transactionRepo.GetTodayDepositsByUserIdCountAsync(cashierId),
+                TodayWithdrawals = await _transactionRepo.GetTodayWithdrawalsByUserIdCountAsync(cashierId)
             };
         }
     }

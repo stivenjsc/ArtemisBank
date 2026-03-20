@@ -3,17 +3,12 @@ using ArtemisBank.Core.Application.ViewModels.Dashboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ArtemisBank.Controllers
+namespace ArtemisBank.Controllers.Roles
 {
     [Authorize(Roles = "Admin")]
-    public class AdminController : Controller
+    public class AdminController(IDashboardService dashboardService) : Controller
     {
-        private readonly IDashboardService _dashboardService;
-
-        public AdminController(IDashboardService dashboardService)
-        {
-            _dashboardService = dashboardService;
-        }
+        private readonly IDashboardService _dashboardService = dashboardService;
 
         public async Task<IActionResult> Index()
         {
@@ -22,11 +17,16 @@ namespace ArtemisBank.Controllers
             var vm = new AdminDashboardViewModel
             {
                 TotalTransactions = data.TotalTransactions,
-                TotalActiveTransactions = data.TotalActiveTransactions,
+                TodayTransactions = data.TodayTransactions,
                 TotalInactiveTransactions = data.TotalInactiveTransactions,
                 TotalDailyPayments = data.TotalDailyPayments,
                 TotalAssignedProducts = data.TotalAssignedProducts,
                 TotalActiveClients = data.TotalActiveClients,
+                TotalProducts = data.TotalProducts,
+                ActiveLoans = data.ActiveLoans,
+                ActiveCreditCards = data.ActiveCreditCards,
+                TotalSavingsAccounts = data.TotalSavingsAccounts,
+                AverageDebt = data.AverageDebt,
                 TotalInactiveClients = data.TotalInactiveClients
             };
 

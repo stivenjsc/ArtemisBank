@@ -1,23 +1,20 @@
-using AutoMapper;
 using ArtemisBank.Core.Application.DTOs;
+using ArtemisBank.Core.Application.DTOs.Account;
 using ArtemisBank.Core.Application.DTOs.SavingsAccount;
+using ArtemisBank.Core.Application.DTOs.Transaction;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Entities;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Domain.Interfaces;
+using AutoMapper;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class SavingsAccountService : ISavingsAccountService
+    public class SavingsAccountService(ISavingsAccountRepository repo, IMapper mapper, ITransactionRepository transrepo) : ISavingsAccountService
     {
-        private readonly ISavingsAccountRepository _repo;
-        private readonly IMapper _mapper;
-
-        public SavingsAccountService(ISavingsAccountRepository repo, IMapper mapper)
-        {
-            _repo = repo;
-            _mapper = mapper;
-        }
+        private readonly ISavingsAccountRepository _repo = repo;
+        private readonly IMapper _mapper = mapper;
+        private readonly ITransactionRepository _transrepo = transrepo;
 
         public async Task<SavingsAccountDto> GetByIdAsync(int id)
         {
@@ -43,7 +40,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             return entity is null ? null : _mapper.Map<SavingsAccountDto>(entity);
         }
 
-        public async Task<PaginatedResult<SavingsAccountDto>> GetAllPagedAsync(int page, int pageSize = 20, AccountStatus? status = null, AccountType? type = null)
+        public async Task<PaginatedResult<SavingsAccountDto>> GetAllPagedAsync(int page, int pageSize = 20, AccountStatus? status = null, AccountType? type = null, string? cedula = null)
         {
             var entities = await _repo.GetAllPagedAsync(page, pageSize, status, type);
             var items = _mapper.Map<IEnumerable<SavingsAccountDto>>(entities);
@@ -163,6 +160,87 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         private static string GenerateAccountNumber()
         {
             return $"ATB{Random.Shared.Next(100000000, 999999999)}";
+        }
+
+        public async Task<IEnumerable<TransactionDto>> GetTransactionsAsync(string accountNumber)
+        {
+            var transactions = await _transrepo.GetAllAsync();
+
+            var accountTransactions = transactions.Where(t => t.SourceAccountNumber == accountNumber || t.DestinationAccountNumber == accountNumber)
+                .OrderByDescending(t => t.CreatedAt).ToList();
+
+            return _mapper.Map<IEnumerable<TransactionDto>>(transactions);
+        }
+
+        public async Task AssignSecondaryAsync(AssignSavingsAccountDto dto)
+        {
+            string accountNumber;
+            do
+            {
+                accountNumber = Random.Shared.Next(100000000, 999999999).ToString();
+            }
+            while (await _repo.GetByAccountNumberAsync(accountNumber) != null);
+
+            var account = new SavingsAccount
+            {
+                AccountNumber = accountNumber,
+                Balance = dto.InitialBalance,
+                UserId = dto.ClientId,
+                Type = AccountType.Secondary,
+                Status = AccountStatus.Active,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _repo.AddAsync(account);
+
+            if (dto.InitialBalance > 0)
+            {
+                var transaction = new Transaction
+                {
+                    Amount = dto.InitialBalance,
+                    Type = TransactionType.Deposit,
+                    DestinationAccountNumber = accountNumber,
+                    SourceAccountNumber = "SYSTEM",
+                    Description = "Initial deposit for secondary account opening",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _transrepo.AddAsync(transaction);
+            }
+        }
+
+        public async Task CancelAsync(string accountNumber)
+        {
+            var secondaryAccount = await _repo.GetByAccountNumberAsync(accountNumber);
+            if (secondaryAccount == null) throw new Exception("Account not found.");
+
+            if (secondaryAccount.IsPrimary)
+                throw new InvalidOperationException("The primary account cannot be cancelled.");
+            var primaryAccount = await _repo.GetPrimaryAccountByClientIdAsync(secondaryAccount.UserId);
+            if (primaryAccount == null)
+                throw new Exception("Destination primary account not found.");
+
+            if (secondaryAccount.Balance > 0)
+            {
+                decimal balanceToTransfer = secondaryAccount.Balance;
+
+                primaryAccount.Balance += balanceToTransfer;
+                secondaryAccount.Balance = 0;
+
+                var transfer = new Transaction
+                {
+                    Amount = balanceToTransfer,
+                    Type = TransactionType.Transfer,
+                    SourceAccountNumber = secondaryAccount.AccountNumber,
+                    DestinationAccountNumber = primaryAccount.AccountNumber,
+                    Description = "Closure of secondary account - Balance transferred to primary",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _transrepo.AddAsync(transfer);
+                await _repo.UpdateAsync(primaryAccount);
+            }
+            secondaryAccount.Status = AccountStatus.Closed;
+            await _repo.UpdateAsync(secondaryAccount);
         }
     }
 }

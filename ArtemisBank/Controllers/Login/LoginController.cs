@@ -3,18 +3,12 @@ using ArtemisBank.Core.Application.ViewModels.User;
 using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ArtemisBank.Controllers
+namespace ArtemisBank.Controllers.Login
 {
-    public class LoginController : Controller
+    public class LoginController(IUserService userService) : Controller
     {
-        private readonly IUserService _userService;
+        private readonly IUserService _userService = userService;
 
-        public LoginController(IUserService userService)
-        {
-            _userService = userService;
-        }
-
-        [HttpGet]
         public IActionResult Index()
         {
             if (User.Identity?.IsAuthenticated == true)
@@ -32,6 +26,7 @@ namespace ArtemisBank.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(LoginViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -44,7 +39,7 @@ namespace ArtemisBank.Controllers
             if (!result.Success)
             {
                 vm.HasError = true;
-                vm.Error = result.Error ?? "Credenciales inválidas.";
+                vm.Error = result.Error ?? "Invalid Credential.";
                 return View(vm);
             }
 
@@ -64,30 +59,45 @@ namespace ArtemisBank.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpGet]
         public IActionResult ForgotPassword()
         {
             return View(new ForgotPasswordViewModel());
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel vm)
         {
             if (!ModelState.IsValid)
             {
                 return View(vm);
             }
+            var result = await _userService.GeneratePasswordResetTokenAsync(vm.Username);
 
+            if (!result)
+            {
+                vm.HasError = true;
+                vm.Error = "No user with that name was found.";
+                return View(vm);
+            }
+            TempData["Success"] = "A reset link has been sent to your email.";
             return View("ForgotPasswordConfirmation");
         }
 
-        [HttpGet]
         public IActionResult ResetPassword(string username, string token)
         {
-            return View(new ResetPasswordViewModel { Username = username, Token = token });
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(token))
+                return RedirectToAction("Index");
+
+            return View(new ResetPasswordViewModel
+            {
+                Username = username,
+                Token = token
+            });
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -100,7 +110,7 @@ namespace ArtemisBank.Controllers
             if (!result)
             {
                 vm.HasError = true;
-                vm.Error = "No se pudo restablecer la contraseña.";
+                vm.Error = "The password could not be reset. The link may have expired.";
                 return View(vm);
             }
 

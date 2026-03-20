@@ -10,18 +10,13 @@ using ArtemisBank.Core.Domain.Interfaces;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class CreditCardService : ICreditCardService
+    public class CreditCardService(ICreditCardRepository repo, ISavingsAccountRepository accountRepo, IMapper mapper, IUserService user, IEmailService email) : ICreditCardService
     {
-        private readonly ICreditCardRepository _repo;
-        private readonly ISavingsAccountRepository _accountRepo;
-        private readonly IMapper _mapper;
-
-        public CreditCardService(ICreditCardRepository repo, ISavingsAccountRepository accountRepo, IMapper mapper)
-        {
-            _repo = repo;
-            _accountRepo = accountRepo;
-            _mapper = mapper;
-        }
+        private readonly ICreditCardRepository _repo = repo;
+        private readonly ISavingsAccountRepository _accountRepo = accountRepo;
+        private readonly IMapper _mapper = mapper;
+        private readonly IUserService _userService = user;
+        private readonly IEmailService _emailService = email;
 
         public async Task<CreditCardDto> GetByIdAsync(int id)
         {
@@ -158,6 +153,58 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         {
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(cvc));
             return Convert.ToHexStringLower(bytes);
+        }
+
+        public async Task UpdateLimitAsync(int cardId, decimal newCreditLimit)
+        {
+            var card = await _repo.GetByIdAsync(cardId);
+            if (card == null) throw new Exception("Credit card not found.");
+
+            decimal currentDebt = card.CreditLimit - card.AvailableBalance;
+            if (newCreditLimit < currentDebt)
+            {
+                throw new InvalidOperationException($"The new limit cannot be lower than the current debt (${currentDebt:N2}).");
+            }
+
+            card.AvailableBalance = newCreditLimit - currentDebt;
+            card.CreditLimit = newCreditLimit;
+            await _repo.UpdateAsync(card);
+
+            var user = await _userService.GetByIdAsync(card.ClientId);
+            await _emailService.SendAsync(user.Email, "Credit Limit Updated", $"Your new limit is {newCreditLimit:C2}");
+        }
+
+        public async Task CancelAsync(int cardId)
+        {
+            var card = await _repo.GetByIdAsync(cardId);
+            if (card == null) throw new Exception("Credit card not found.");
+
+            if (card.Status == CardStatus.Cancelled) return;
+
+            decimal currentDebt = card.CreditLimit - card.AvailableBalance;
+            if (currentDebt > 0)
+            {
+                throw new InvalidOperationException($"Cannot cancel card. Client owes ${currentDebt:N2}. The balance must be zero.");
+            }
+
+            card.Status = CardStatus.Cancelled;
+            card.AvailableBalance = 0;
+            card.CreditLimit = 0;
+
+            await _repo.UpdateAsync(card);
+
+            var user = await _userService.GetByIdAsync(card.ClientId);
+            if (user != null && !string.IsNullOrEmpty(user.Email))
+            {
+                try
+                {
+                    await _emailService.SendAsync(user.Email, "Credit Card Cancelled", "Your credit card has been successfully closed.");
+                }
+                catch
+                {
+                    // Logging in error, email not working, but cancellation not reversed
+                }
+            }
         }
     }
 }

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace ArtemisBank.Controllers
+namespace ArtemisBank.Controllers.Roles
 {
     [Authorize(Roles = nameof(UserRole.Client))]
     public class ClientController : Controller

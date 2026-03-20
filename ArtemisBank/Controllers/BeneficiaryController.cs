@@ -8,14 +8,9 @@ using System.Security.Claims;
 namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = nameof(UserRole.Client))]
-    public class BeneficiaryController : Controller
+    public class BeneficiaryController(IBeneficiaryService beneficiaryService) : Controller
     {
-        private readonly IBeneficiaryService _beneficiaryService;
-
-        public BeneficiaryController(IBeneficiaryService beneficiaryService)
-        {
-            _beneficiaryService = beneficiaryService;
-        }
+        private readonly IBeneficiaryService _beneficiaryService = beneficiaryService;
 
         private string GetClientId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -26,7 +21,6 @@ namespace ArtemisBank.Controllers
             return View(beneficiaries);
         }
 
-        [HttpGet]
         public IActionResult Create()
         {
             return View(new SaveBeneficiaryViewModel());

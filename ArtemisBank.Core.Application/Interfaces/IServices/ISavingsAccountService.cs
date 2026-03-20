@@ -1,5 +1,7 @@
 using ArtemisBank.Core.Application.DTOs;
+using ArtemisBank.Core.Application.DTOs.Account;
 using ArtemisBank.Core.Application.DTOs.SavingsAccount;
+using ArtemisBank.Core.Application.DTOs.Transaction;
 using ArtemisBank.Core.Domain.Enums;
 
 namespace ArtemisBank.Core.Application.Interfaces.IServices
@@ -10,7 +12,7 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         Task<SavingsAccountDto?> GetByAccountNumberAsync(string accountNumber);
         Task<IEnumerable<SavingsAccountDto>> GetByClientIdAsync(string clientId);
         Task<SavingsAccountDto?> GetPrimaryAccountByClientIdAsync(string clientId);
-        Task<PaginatedResult<SavingsAccountDto>> GetAllPagedAsync(int page, int pageSize = 20, AccountStatus? status = null, AccountType? type = null);
+        Task<PaginatedResult<SavingsAccountDto>> GetAllPagedAsync(int page, int pageSize = 20, AccountStatus? status = null, AccountType? type = null, string? cedula = null);
 
         Task<SavingsAccountDto> CreateAccountAsync(string clientId, decimal initialAmount, AccountType type = AccountType.Primary);
         Task UpdateAsync(SavingsAccountDto dto);
@@ -23,5 +25,9 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         Task<bool> AccountNumberExistsAsync(string accountNumber);
         Task<int> GetTotalActiveAccountsCountAsync();
         Task<bool> HasActiveAccountAsync(string clientId);
+        Task<IEnumerable<TransactionDto>> GetTransactionsAsync(string accountNumber);
+        Task AssignSecondaryAsync(AssignSavingsAccountDto dto);
+        Task CancelAsync(string accountNumber);
+        Task GetByAccountNumberAsync(object accountNumber);
     }
 }

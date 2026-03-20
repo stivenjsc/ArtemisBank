@@ -2,16 +2,19 @@ using ArtemisBank.Core.Application.DTOs;
 using ArtemisBank.Core.Application.DTOs.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Enums;
+using ArtemisBank.Core.Domain.Interfaces;
 using ArtemisBank.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArtemisBank.Infrastructure.Identity.Services
 {
-    public class UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) : IUserService
+    public class UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ILoanRepository loanRepository) : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
+        private readonly ILoanRepository _loanRepository = loanRepository;
+
 
         public async Task<AuthenticationResult> AuthenticateAsync(string username, string password)
         {
@@ -224,6 +227,42 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             return result.Succeeded;
         }
 
+        public async Task<int> GetInactiveClientsCountAsync()
+        {
+            return await _userManager.Users.CountAsync(u => u.Role == UserRole.Client && !u.IsActive);
+        }
+        public async Task<int> GetActiveClientsCountAsync()
+        {
+            return await _userManager.Users.CountAsync(u => u.Role == UserRole.Client && u.IsActive);
+        }
+
+        public async Task<IEnumerable<UserDto>> GetActiveClientsWithoutLoanAsync(string? cedula = null)
+        {
+            var query = _userManager.Users.Where(u => u.Role == UserRole.Client && u.IsActive);
+
+            if (!string.IsNullOrEmpty(cedula)) query = query.Where(u => u.Cedula.Contains(cedula));
+
+            var clients = await query.ToListAsync();
+
+            var result = new List<UserDto>();
+            foreach (var client in clients)
+            {
+                var hasActiveLoan = await _loanRepository.ClientHasActiveLoanAsync(client.Id);
+                if (!hasActiveLoan) result.Add(MapToDto(client, UserRole.Client.ToString()));
+            }
+
+            return result;
+        }
+        public async Task<IEnumerable<UserDto>> GetActiveClientsAsync(string? cedula = null)
+        {
+            var query = _userManager.Users.Where(u => u.Role == UserRole.Client && u.IsActive);
+
+            if (!string.IsNullOrEmpty(cedula)) query = query.Where(u => u.Cedula.Contains(cedula));
+
+            var clients = await query.ToListAsync();
+
+            return clients.Select(u => MapToDto(u, UserRole.Client.ToString()));
+        }
         public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();

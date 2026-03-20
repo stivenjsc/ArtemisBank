@@ -8,20 +8,12 @@ using ArtemisBank.Core.Domain.Interfaces;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class LoanService : ILoanService
+    public class LoanService(ILoanRepository repo, ILoanInstallmentRepository installmentRepo, ISavingsAccountRepository accountRepo, IMapper mapper) : ILoanService
     {
-        private readonly ILoanRepository _repo;
-        private readonly ILoanInstallmentRepository _installmentRepo;
-        private readonly ISavingsAccountRepository _accountRepo;
-        private readonly IMapper _mapper;
-
-        public LoanService(ILoanRepository repo, ILoanInstallmentRepository installmentRepo, ISavingsAccountRepository accountRepo, IMapper mapper)
-        {
-            _repo = repo;
-            _installmentRepo = installmentRepo;
-            _accountRepo = accountRepo;
-            _mapper = mapper;
-        }
+        private readonly ILoanRepository _repo = repo;
+        private readonly ILoanInstallmentRepository _installmentRepo = installmentRepo;
+        private readonly ISavingsAccountRepository _accountRepo = accountRepo;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<LoanDto> GetByIdAsync(int id)
         {
@@ -83,9 +75,8 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             await _repo.AddAsync(loan);
 
             // French amortization: fixed monthly payment
-            var monthlyRate = dto.AnnualInterestRate / 100m / 12m;
-            var fixedPayment = dto.Amount * (monthlyRate * (decimal)Math.Pow((double)(1 + monthlyRate), dto.TermInMonths))
-                              / ((decimal)Math.Pow((double)(1 + monthlyRate), dto.TermInMonths) - 1);
+            var totalDebt = CalculateTotalLoanDebt(dto.Amount, dto.AnnualInterestRate, dto.TermInMonths);
+            var fixedPayment = totalDebt / dto.TermInMonths;
 
             for (int i = 1; i <= dto.TermInMonths; i++)
             {
@@ -172,5 +163,69 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         {
             return await _repo.GetTotalActiveLoansCountAsync();
         }
+
+        #region private helper methods
+        private static decimal CalculateTotalLoanDebt(decimal amount, decimal annualRate, int months)
+        {
+            if (annualRate == 0) return amount;
+
+            double monthlyRate = (double)annualRate / 100 / 12;
+            double p = (double)amount;
+            double n = months;
+
+            double factor = Math.Pow(1 + monthlyRate, n);
+            double monthlyPayment = p * (monthlyRate * factor) / (factor - 1);
+
+            return (decimal)(monthlyPayment * n);
+        }
+
+        public async Task<(bool IsHighRisk, decimal AverageDebt, decimal CurrentDebt)> EvaluateRiskAsync(string clientId, decimal amount, decimal rate, int months)
+        {
+            var averageDebt = await GetAverageDebtAsync();
+            var currentDebt = await GetTotalDebtByClientIdAsync(clientId);
+
+            var totalNewLoanDebt = CalculateTotalLoanDebt(amount, rate, months);
+            var newTotalDebt = currentDebt + totalNewLoanDebt;
+
+            bool isHighRisk = currentDebt > averageDebt || newTotalDebt > averageDebt;
+
+            return (isHighRisk, averageDebt, currentDebt);
+        }
+
+        public async Task UpdateInterestRateAsync(int loanId, decimal newAnnualInterestRate)
+        {
+            var loan = await _repo.GetByIdAsync(loanId);
+            if (loan == null) throw new Exception("Loan not found");
+
+            var pendingInstallments = (await _installmentRepo.GetByLoanIdAsync(loanId))
+                .Where(i => i.Status != InstallmentStatus.Paid).OrderBy(i => i.InstallmentNumber).ToList();
+            if (!pendingInstallments.Any()) return;
+
+            decimal remainingBalance = pendingInstallments.Sum(i => i.InstallmentAmount - i.AmountPaid);
+            int remainingMonths = pendingInstallments.Count;
+            double monthlyRate = (double)newAnnualInterestRate / 100 / 12;
+            decimal newFixedPayment;
+
+            if (monthlyRate == 0)
+            {
+                newFixedPayment = remainingBalance / remainingMonths;
+            }
+            else
+            {
+                double factor = Math.Pow(1 + monthlyRate, remainingMonths);
+                double monthlyPayment = (double)remainingBalance * (monthlyRate * factor) / (factor - 1);
+                newFixedPayment = (decimal)monthlyPayment;
+            }
+
+            foreach (var installment in pendingInstallments)
+            {
+                installment.InstallmentAmount = Math.Round(newFixedPayment, 2);
+                await _installmentRepo.UpdateAsync(installment);
+            }
+
+            loan.AnualInterestRate = newAnnualInterestRate;
+            await _repo.UpdateAsync(loan);
+        }
+        #endregion
     }
 }

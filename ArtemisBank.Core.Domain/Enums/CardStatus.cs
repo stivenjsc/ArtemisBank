@@ -5,6 +5,7 @@
         Active,
         Inactive,
         Blocked,
-        Expired
+        Expired,
+        Cancelled
     }
 }
