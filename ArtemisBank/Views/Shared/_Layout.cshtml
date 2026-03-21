@@ -3,48 +3,155 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ArtemisBank</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/ArtemisBank.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] — Artemis Bank</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/Artemis.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ArtemisBank</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-landmark"></i></div>
+        <div class="brand-name">Artemis</div>
+        <div class="brand-tagline">Private Bank</div>
+    </div>
+    <div class="sidebar-nav">
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="nav-section-label">Principal</div>
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" asp-controller="Admin" asp-action="Index">
+                <i class="fa-solid fa-gauge"></i> Dashboard
+            </a>
+            <div class="nav-section-label">Gestión</div>
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")" asp-controller="User" asp-action="Index">
+                <i class="fa-solid fa-users"></i> Users
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Loan" ? "active" : "")" asp-controller="Loan" asp-action="Index">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Loan
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "CreditCard" ? "active" : "")" asp-controller="CreditCard" asp-action="Index">
+                <i class="fa-solid fa-credit-card"></i> Cards
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "SavingsAccount" ? "active" : "")" asp-controller="SavingsAccount" asp-action="Index">
+                <i class="fa-solid fa-piggy-bank"></i> Savings Accounts
+            </a>
+        }
+        else if (User.IsInRole("Cashier"))
+        {
+            <div class="nav-section-label">Operations</div>
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Cashier" asp-action="Index">
+                <i class="fa-solid fa-gauge"></i> Dashboard
+            </a>
+            <a class="nav-link" asp-controller="Cashier" asp-action="Deposit">
+                <i class="fa-solid fa-arrow-down-to-bracket"></i> Deposit
+            </a>
+            <a class="nav-link" asp-controller="Cashier" asp-action="Withdrawal">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i> Withdrawal
+            </a>
+            <a class="nav-link" asp-controller="Cashier" asp-action="PayCreditCard">
+                <i class="fa-solid fa-credit-card"></i> Pay Credit Card
+            </a>
+            <a class="nav-link" asp-controller="Cashier" asp-action="PayLoan">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Pay Loan
+            </a>
+            <a class="nav-link" asp-controller="Cashier" asp-action="ThirdPartyTransfer">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i> Third Party Transfer
+            </a>
+        }
+        else
+        {
+            <div class="nav-section-label">My Banking</div>
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Client" ? "active" : "")" asp-controller="Client" asp-action="Index">
+                <i class="fa-solid fa-house"></i> Start
+            </a>
+            <div class="nav-section-label">Transaction</div>
+            <a class="nav-link" asp-controller="Transaction" asp-action="ExpressPayment">
+                <i class="fa-solid fa-bolt"></i> Express Transaction
+            </a>
+            <a class="nav-link" asp-controller="Transaction" asp-action="CreditCardPayment">
+                <i class="fa-solid fa-credit-card"></i> Payment Card
+            </a>
+            <a class="nav-link" asp-controller="Transaction" asp-action="LoanPayment">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Loan payment
+            </a>
+            <a class="nav-link" asp-controller="Transaction" asp-action="BeneficiaryPayment">
+                <i class="fa-solid fa-people-arrows"></i> To beneficiary
+            </a>
+            <div class="nav-section-label">More</div>
+            <a class="nav-link" asp-controller="Beneficiary" asp-action="Index">
+                <i class="fa-solid fa-address-book"></i> Beneficiaries
+            </a>
+            <a class="nav-link" asp-controller="CreditCard" asp-action="CashAdvance">
+                <i class="fa-solid fa-money-bill-wave"></i> Effective advance
+            </a>
+            <a class="nav-link" asp-controller="Transaction" asp-action="Transfer">
+                <i class="fa-solid fa-shuffle"></i> between my accounts
+            </a>
+        }
+    </div>
+    <div class="sidebar-footer">
+        <form asp-controller="Login" asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="nav-link border-0 w-100 text-start bg-transparent">
+                <i class="fa-solid fa-right-from-bracket"></i> Sign out
+            </button>
+        </form>
+    </div>
+</nav>
+
+<div class="main-wrapper">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn-ghost-artemis btn-artemis d-md-none" id="sidebarToggle" type="button">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <span class="topbar-title">@ViewData["Title"]</span>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-user">
+                <div class="user-avatar">@(User.Identity?.Name?.Substring(0,1).ToUpper() ?? "U")</div>
+                <div class="user-info">
+                    <div class="user-name">@User.Identity?.Name</div>
+                    <div class="user-role">
+                        @if (User.IsInRole("Admin")) { <text>Administrator</text> }
+                        else if (User.IsInRole("Cashier")) { <text>Cashier</text> }
+                        else { <text>Client</text> }
+                    </div>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - ArtemisBank - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    </div>
+    <main class="page-content">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert-artemis alert-artemis-success mb-4">
+                <i class="fa-solid fa-circle-check"></i> @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-artemis alert-artemis-danger mb-4">
+                <i class="fa-solid fa-circle-exclamation"></i> @TempData["Error"]
+            </div>
+        }
+        @if (TempData["Warning"] != null)
+        {
+            <div class="alert-artemis alert-artemis-warning mb-4">
+                <i class="fa-solid fa-triangle-exclamation"></i> @TempData["Warning"]
+            </div>
+        }
+        @RenderBody()
+    </main>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('open');
+    });
+</script>
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

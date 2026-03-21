@@ -1,13 +1,27 @@
-﻿using ArtemisBank.Infrastructure.Shared.EmailServices.IEmailServices;
+﻿using ArtemisBank.Infrastructure.Shared.EmailServices.IEmailService;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 namespace ArtemisBank.Infrastructure.Shared.EmailServices
 {
-    public class EmailService(IOptions<EmailSettings> settings) : IEmailService
+    public class EmailService(IOptions<EmailSettings> settings) : ICorreoServices
     {
         private readonly EmailSettings _settings = settings.Value;
+
+        public async Task SendAsync(string to, string subject, string body)
+        {
+            var request = new EmailRequest
+            {
+                To = to,
+                Subject = subject,
+                Body = body,
+                IsHtml = true
+            };
+
+            await SendEmailAsync(request);
+        }
+
         public async Task SendEmailAsync(EmailRequest request)
         {
             var email = new MimeMessage();

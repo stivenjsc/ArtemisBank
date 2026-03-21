@@ -7,21 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\**" />
+    <Compile Remove="ViewModels\**" />
+    <Content Remove="Models\**" />
+    <Content Remove="ViewModels\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <EmbeddedResource Remove="ViewModels\**" />
+    <None Remove="Models\**" />
+    <None Remove="ViewModels\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ArtemisBank.Core.Application\ArtemisBank.Core.Application.csproj" />
     <ProjectReference Include="..\ArtemisBank.Core.Domain\ArtemisBank.Core.Domain.csproj" />
     <ProjectReference Include="..\ArtemisBank.Infrastructure.Identity\ArtemisBank.Infrastructure.Identity.csproj" />
     <ProjectReference Include="..\ArtemisBank.Infrastructure.Persistence\ArtemisBank.Infrastructure.Persistence.csproj" />
     <ProjectReference Include="..\ArtemisBank.Infrastructure.Shared\ArtemisBank.Infrastructure.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="ViewModels\Beneficiary\" />
-    <Folder Include="ViewModels\CreditCard\" />
-    <Folder Include="ViewModels\Dashboard\" />
-    <Folder Include="ViewModels\Loan\" />
-    <Folder Include="ViewModels\Transaction\" />
-    <Folder Include="ViewModels\User\" />
   </ItemGroup>
 
 </Project>

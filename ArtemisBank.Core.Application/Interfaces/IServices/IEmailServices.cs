@@ -1,6 +1,6 @@
 namespace ArtemisBank.Core.Application.Interfaces.IServices
 {
-    public interface IEmailService
+    public interface IEmailServices
     {
         Task SendAsync(string to, string subject, string body);
     }

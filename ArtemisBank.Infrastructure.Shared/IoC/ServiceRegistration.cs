@@ -1,5 +1,5 @@
-﻿using ArtemisBank.Infrastructure.Shared.EmailServices;
-using ArtemisBank.Infrastructure.Shared.EmailServices.IEmailServices;
+﻿using ArtemisBank.Core.Application.Interfaces.IServices;
+using ArtemisBank.Infrastructure.Shared.EmailServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,7 +11,7 @@ namespace ArtemisBank.Infrastructure.Shared.IoC
             IConfiguration configuration)
         {
             services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
-            services.AddTransient<IEmailService, EmailService>();
+            services.AddTransient<IEmailServices, EmailService>();
         }
     }
 }

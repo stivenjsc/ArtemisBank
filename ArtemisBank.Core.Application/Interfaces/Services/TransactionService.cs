@@ -13,14 +13,14 @@ using TransactionStatus = ArtemisBank.Core.Domain.Enums.TransactionStatus;
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
     public class TransactionService(ITransactionRepository repo, ISavingsAccountRepository accountRepo, 
-        IMapper mapper, IUserService user, IEmailService email, ICreditCardRepository creditCard, ILoanRepository loanrepo, 
+        IMapper mapper, IUserService user, IEmailServices email, ICreditCardRepository creditCard, ILoanRepository loanrepo, 
         ILoanInstallmentRepository installment) : ITransactionService
     {
         private readonly ITransactionRepository _repo = repo;
         private readonly ISavingsAccountRepository _accountRepo = accountRepo;
         private readonly IMapper _mapper = mapper;
         private readonly IUserService _userService = user;
-        private readonly IEmailService _emailService = email;
+        private readonly IEmailServices _emailService = email;
         private readonly ICreditCardRepository _creditCardRepo = creditCard;
         private readonly ILoanRepository _loanRepo = loanrepo;
         private readonly ILoanInstallmentRepository _installmentRepo = installment;

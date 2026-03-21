@@ -10,13 +10,13 @@ using ArtemisBank.Core.Domain.Interfaces;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class CreditCardService(ICreditCardRepository repo, ISavingsAccountRepository accountRepo, IMapper mapper, IUserService user, IEmailService email) : ICreditCardService
+    public class CreditCardService(ICreditCardRepository repo, ISavingsAccountRepository accountRepo, IMapper mapper, IUserService user, IEmailServices email) : ICreditCardService
     {
         private readonly ICreditCardRepository _repo = repo;
         private readonly ISavingsAccountRepository _accountRepo = accountRepo;
         private readonly IMapper _mapper = mapper;
         private readonly IUserService _userService = user;
-        private readonly IEmailService _emailService = email;
+        private readonly IEmailServices _emailService = email;
 
         public async Task<CreditCardDto> GetByIdAsync(int id)
         {
