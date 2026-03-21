@@ -1,0 +1,113 @@
+﻿@model ClientDashboardViewModel
+@{
+    ViewData["Title"] = "My Bank";
+}
+
+<div class="section-title">
+    <i class="fa-solid fa-piggy-bank" style="color:var(--emerald-600)"></i> Savings Accounts
+</div>
+
+<div class="row g-3 mb-4">
+    @foreach (var account in Model.SavingsAccounts)
+    {
+        <div class="col-lg-4 col-md-6">
+            <div class="product-card">
+                <div class="product-card-header">
+                    <div class="product-card-type">
+                        @(account.Type == AccountType.Primary ? "Main Account" : "Secondary Account")
+                    </div>
+                    <div class="product-card-number">@account.AccountNumber</div>
+                    <div class="product-card-balance"><small>RD$</small> @account.Balance.ToString("N2")</div>
+                </div>
+                <div class="product-card-body">
+                    <div class="meta-row"><span class="meta-label">Type</span><span class="meta-value">@account.Type</span></div>
+                    <div class="meta-row"><span class="meta-label">Status</span><span class="meta-value green">Active</span></div>
+                    <div class="mt-3">
+                        <a asp-controller="Client" asp-action="AccountDetail" asp-route-accountNumber="@account.AccountNumber"
+                           class="btn-artemis btn-outline-artemis w-100 justify-content-center">
+                            <i class="fa-solid fa-eye"></i> View Transactions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (Model.Loans.Any())
+{
+    <div class="section-title">
+        <i class="fa-solid fa-file-invoice-dollar" style="color:var(--emerald-600)"></i> My Loans
+    </div>
+    <div class="row g-3 mb-4">
+        @foreach (var loan in Model.Loans)
+        {
+            <div class="col-lg-4 col-md-6">
+                <div class="product-card">
+                    <div class="product-card-header loan">
+                        <div class="product-card-type">Active Loan</div>
+                        <div class="product-card-number">@loan.LoanNumber</div>
+                        <div class="product-card-balance"><small>Pending RD$</small> @loan.Amount.ToString("N2")</div>
+                    </div>
+                    <div class="product-card-body">
+                        <div class="meta-row"><span class="meta-label">Principal</span><span class="meta-value">RD$ @loan.Amount.ToString("N2")</span></div>
+                        <div class="meta-row"><span class="meta-label">Term</span><span class="meta-value">@loan.TermInMonths Months</span></div>
+                        <div class="meta-row"><span class="meta-label">Annual Rate</span><span class="meta-value">@loan.AnualInterestRate%</span></div>
+                        <div class="meta-row">
+                            <span class="meta-label">Status</span>
+                            <span class="meta-value @(loan.Status == LoanStatus.Active ? "green" : "red")">
+                                @(loan.Status == LoanStatus.Active ? "Active" : "Paid Off")
+                            </span>
+                        </div>
+                        <div class="mt-3">
+                            <a asp-controller="Client" asp-action="LoanDetail" asp-route-loanId="@loan.Id"
+                               class="btn-artemis btn-outline-artemis w-100 justify-content-center">
+                                <i class="fa-solid fa-eye"></i> View Amortization
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (Model.CreditCards.Any())
+{
+    <div class="section-title">
+        <i class="fa-solid fa-credit-card" style="color:var(--emerald-600)"></i> My Credit Cards
+    </div>
+    <div class="row g-3 mb-4">
+        @foreach (var card in Model.CreditCards)
+        {
+            var available = card.CreditLimit - card.AmountOwed;
+            var pct = card.CreditLimit > 0 ? (int)((card.AmountOwed / card.CreditLimit) * 100) : 0;
+            <div class="col-lg-4 col-md-6">
+                <div class="product-card">
+                    <div class="product-card-header credit">
+                        <div class="product-card-type">Credit Card</div>
+                        <div class="product-card-number">**** **** **** @card.CardNumber.Substring(12)</div>
+                        <div class="product-card-balance"><small>Available RD$</small> @available.ToString("N2")</div>
+                    </div>
+                    <div class="product-card-body">
+                        <div class="meta-row"><span class="meta-label">Limit</span><span class="meta-value">RD$ @card.CreditLimit.ToString("N2")</span></div>
+                        <div class="meta-row"><span class="meta-label">Owed</span><span class="meta-value red">RD$ @card.AmountOwed.ToString("N2")</span></div>
+                        <div class="meta-row"><span class="meta-label">Expires</span><span class="meta-value">@card.ExpirationDate</span></div>
+                        <div class="mt-2 mb-2">
+                            <div class="d-flex justify-content-between mb-1" style="font-size:.72rem; color:var(--muted)">
+                                <span>Credit Usage</span><span>@pct%</span>
+                            </div>
+                            <div style="height:4px; background:#e2e8f0; border-radius:2px">
+                                <div style="height:4px; border-radius:2px; width:@pct%; background:@(pct > 80 ? "var(--danger)" : pct > 50 ? "var(--warning)" : "var(--emerald-500)")"></div>
+                            </div>
+                        </div>
+                        <a asp-controller="Client" asp-action="CardDetail" asp-route-cardId="@card.Id"
+                           class="btn-artemis btn-outline-artemis w-100 justify-content-center">
+                            <i class="fa-solid fa-eye"></i> View Spending
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

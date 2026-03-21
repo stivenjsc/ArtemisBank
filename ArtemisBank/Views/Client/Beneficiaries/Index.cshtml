@@ -1,0 +1,79 @@
+﻿@model IEnumerable<BeneficiaryDto>
+@{
+    ViewData["Title"] = "My Beneficiaries";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Client" asp-action="Index">My Bank</a> / Beneficiaries
+</div>
+
+<div class="table-card mb-4">
+    <div class="table-card-header">
+        <h5>
+            <i class="fa-solid fa-address-book me-2" style="color:var(--emerald-600)"></i>
+            My Beneficiaries
+        </h5>
+        <button type="button" class="btn-artemis btn-primary-artemis" data-bs-toggle="modal" data-bs-target="#addModal">
+            <i class="fa-solid fa-plus"></i> + Add Beneficiary
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="artemis-table">
+            <thead>
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Account No.</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model)
+                {
+                    <tr>
+                        <td>@b.FirstName</td>
+                        <td>@b.LastName</td>
+                        <td style="letter-spacing:1px; font-family:'DM Sans', sans-serif">
+                            @b.AccountNumber
+                        </td>
+                        <td>
+                            <form asp-controller="Beneficiary" asp-action="Delete" method="post"
+                                  onsubmit="return confirm('Are you sure you want to delete this beneficiary?')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@b.Id" />
+                                <button type="submit" class="btn-artemis btn-danger-artemis"
+                                        style="padding:5px 10px; font-size:.78rem">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:12px; border:1px solid rgba(0,0,0,.08)">
+            <div class="modal-header" style="border-bottom:1px solid rgba(0,0,0,.06)">
+                <h5 class="modal-title" style="font-family:'Playfair Display', serif">Add Beneficiary</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Beneficiary" asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label">Account Number</label>
+                        <input name="AccountNumber" class="form-control" placeholder="9 digits" maxlength="9" required />
+                    </div>
+                    <button type="submit" class="btn-artemis btn-primary-artemis w-100 justify-content-center">
+                        <i class="fa-solid fa-plus"></i> Add
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

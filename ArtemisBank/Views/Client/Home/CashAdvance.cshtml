@@ -1,0 +1,85 @@
+﻿@model CashAdvanceViewModel
+@{
+    ViewData["Title"] = "Cash Advance";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Client" asp-action="Index">My Bank</a> / Cash Advance
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="form-card">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="stat-icon mb-0">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0" style="font-family:'Playfair Display',serif">Cash Advance</h4>
+                    <p class="text-muted mb-0" style="font-size:.82rem">
+                        A 6.25% interest rate applies to the amount
+                    </p>
+                </div>
+            </div>
+            @if (Model.HasError)
+            {
+                <div class="alert-artemis alert-artemis-danger mb-3">
+                    <i class="fa-solid fa-circle-exclamation"></i> @Model.Error
+                </div>
+            }
+            <form asp-controller="CreditCard" asp-action="CashAdvance" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label">Source Credit Card</label>
+                    <select asp-for="CreditCardId" class="form-select">
+                        <option value="">Select a card</option>
+                        @foreach (var card in Model.UserCreditCards)
+                        {
+                            <option value="@card.Id">
+                                **** @card.CardNumber.Substring(12) — Available: RD$ @((card.CreditLimit - card.AmountOwed).ToString("N2"))
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Destination Savings Account</label>
+                    <select asp-for="SavingsAccountId" class="form-select">
+                        <option value="">Select an account</option>
+                        @foreach (var acc in Model.UserAccounts)
+                        {
+                            <option value="@acc.Id">
+                                @acc.AccountNumber — RD$ @acc.Balance.ToString("N2")
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Advance Amount</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">RD$</span>
+                        <input asp-for="Amount" type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" />
+                    </div>
+                </div>
+
+                <div class="alert-artemis alert-artemis-warning mb-4">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    This advance will generate an additional 6.25% charge on the requested amount
+                </div>
+
+                <hr class="divider" />
+
+                <div class="d-flex gap-2 justify-content-between">
+                    <a asp-controller="Client" asp-action="Index" class="btn-artemis btn-ghost-artemis">
+                        <i class="fa-solid fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-artemis btn-primary-artemis">
+                        <i class="fa-solid fa-money-bill-wave"></i> Process Advance
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

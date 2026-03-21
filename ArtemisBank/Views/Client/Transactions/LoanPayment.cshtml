@@ -1,0 +1,82 @@
+﻿@model LoanPaymentViewModel
+@{
+    ViewData["Title"] = "Loan Payment";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Client" asp-action="Index">My Bank</a> / Loan Payment
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="form-card">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="stat-icon mb-0" style="background:#eff6ff; color:#1d4ed8">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0" style="font-family:'Playfair Display',serif">Loan payment</h4>
+                    <p class="text-muted mb-0" style="font-size:.82rem">
+                        Payment is applied installment by installment
+                    </p>
+                </div>
+            </div>
+
+            @if (Model.HasError)
+            {
+                <div class="alert-artemis alert-artemis-danger mb-3">
+                    <i class="fa-solid fa-circle-exclamation"></i> @Model.Error
+                </div>
+            }
+
+            <form asp-controller="Transaction" asp-action="LoanPayment" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label">Loan to Pay</label>
+                    <select asp-for="LoanNumber" class="form-select">
+                        <option value="">Select loan</option>
+                        @foreach (var loan in Model.UserLoans)
+                        {
+                            <option value="@loan.LoanNumber">
+                                @loan.LoanNumber — Pending: RD$ @loan.Amount.ToString("N2")
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Source Account</label>
+                    <select asp-for="SourceAccountNumber" class="form-select">
+                        <option value="">Select account</option>
+                        @foreach (var acc in Model.UserAccounts)
+                        {
+                            <option value="@acc.AccountNumber">
+                                @acc.AccountNumber — RD$ @acc.Balance.ToString("N2")
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Amount to Pay</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">RD$</span>
+                        <input asp-for="Amount" type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" />
+                    </div>
+                </div>
+
+                <hr class="divider" />
+
+                <div class="d-flex gap-2 justify-content-between">
+                    <a asp-controller="Client" asp-action="Index" class="btn-artemis btn-ghost-artemis">
+                        <i class="fa-solid fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-artemis btn-primary-artemis">
+                        <i class="fa-solid fa-money-bill-transfer"></i> Process Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
