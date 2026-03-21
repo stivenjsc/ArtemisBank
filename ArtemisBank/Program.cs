@@ -1,9 +1,9 @@
 using ArtemisBank.Core.Application.IoC;
 using ArtemisBank.Infrastructure.Identity;
-using ArtemisBank.Infrastructure.Persistence.IoC;
-using ArtemisBank.Infrastructure.Shared.IoC;
 using ArtemisBank.Infrastructure.Identity.Entities;
 using ArtemisBank.Infrastructure.Identity.Seeds;
+using ArtemisBank.Infrastructure.Persistence.IoC;
+using ArtemisBank.Infrastructure.Shared.IoC;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);

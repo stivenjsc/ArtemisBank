@@ -11,10 +11,27 @@ namespace ArtemisBank.Infrastructure.Identity
 {
     public static class ServiceRegistration
     {
-        public static IServiceCollection AddIdentityInfrastructure(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddIdentityInfrastructure(this IServiceCollection services, IConfiguration config)
         {
-            services.AddDbContext<IdentityContext>(options =>
-                options.UseMySQL(configuration.GetConnectionString("IdentityConnection")!));
+            GeneralConfiguration(services, config);
+            return services;
+        }
+        #region private methods
+        private static void GeneralConfiguration(IServiceCollection services, IConfiguration config)
+        {
+            #region Context
+            if (config.GetValue<bool>("UseInMemoryDatabase"))
+            {
+                services.AddDbContext<IdentityContext>(opt => opt.UseInMemoryDatabase("AppDb"));
+            }
+            else
+            {
+                services.AddDbContext<IdentityContext>(options =>
+                    options.UseMySQL(config.GetConnectionString("IdentityConnection")!));
+            }
+            #endregion
+
+            #region identity configuration
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
@@ -26,8 +43,8 @@ namespace ArtemisBank.Infrastructure.Identity
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = true;
             })
-            .AddEntityFrameworkStores<IdentityContext>()
-            .AddDefaultTokenProviders();
+                .AddEntityFrameworkStores<IdentityContext>()
+                .AddDefaultTokenProviders();
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -37,9 +54,14 @@ namespace ArtemisBank.Infrastructure.Identity
                 options.SlidingExpiration = true;
             });
 
+            #endregion
+
+            #region IOC
+
             services.AddTransient<IUserService, UserService>();
 
-            return services;
+            #endregion
         }
+        #endregion
     }
 }
