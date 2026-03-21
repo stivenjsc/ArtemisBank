@@ -4,6 +4,7 @@ namespace ArtemisBank.Core.Application.ViewModels.User
 {
     public class ResetPasswordViewModel
     {
+        public string? UserId { get; set; }
         [Required(ErrorMessage = "El nombre de usuario es requerido.")]
         public string Username { get; set; } = string.Empty;
 

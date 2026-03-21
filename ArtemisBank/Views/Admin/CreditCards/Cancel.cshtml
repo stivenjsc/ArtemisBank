@@ -1,0 +1,43 @@
+﻿@model CancelCreditCardViewModel
+@{
+    ViewData["Title"] = "Cancel Card";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-5">
+        <div class="confirm-card">
+            <div class="confirm-icon danger">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+            <h4 class="text-center mb-1" style="font-family:'Playfair Display',serif">Cancel card?</h4>
+            <p class="text-center text-muted mb-4" style="font-size:.85rem">
+                Are you sure you want to cancel the card ending in @Model.LastFourDigits?
+            </p>
+            @if (Model.AmountOwed > 0)
+            {
+                <div class="alert-artemis alert-artemis-danger mb-4">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    To cancel this card, the client must pay the full outstanding balance (RD$ @Model.AmountOwed.ToString("N2")).
+                </div>
+            }
+            <form asp-controller="CreditCard" asp-action="Cancel" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="CardId" />
+                <input type="hidden" asp-for="LastFourDigits" />
+                <input type="hidden" asp-for="AmountOwed" />
+
+                <div class="d-flex gap-2">
+                    <a asp-controller="CreditCard" asp-action="Index" class="btn-artemis btn-ghost-artemis flex-fill justify-content-center">
+                        <i class="fa-solid fa-xmark"></i> Back
+                    </a>
+                    @if (Model.AmountOwed == 0)
+                    {
+                        <button type="submit" class="btn-artemis btn-danger-artemis flex-fill justify-content-center">
+                            <i class="fa-solid fa-ban"></i> Confirm Cancellation
+                        </button>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

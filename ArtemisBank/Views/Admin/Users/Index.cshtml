@@ -1,0 +1,118 @@
+﻿@model PaginatedResult<UserDto>
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Admin" asp-action="Index">Home</a> / Users
+</div>
+
+<div class="table-card">
+    <div class="table-card-header">
+        <h5>
+            <i class="fa-solid fa-users me-2" style="color:var(--emerald-600)"></i>
+            System Users
+        </h5>
+        <div class="d-flex gap-2 align-items-center">
+            <form method="get" asp-controller="User" asp-action="Index" class="d-flex gap-2">
+                <select name="role" class="form-select form-select-sm" style="width:160px" onchange="this.form.submit()">
+                    <option value="">All Roles</option>
+                    <option value="Admin" selected="@(ViewBag.CurrentRole?.ToString() == "Admini")">Administrator</option>
+                    <option value="Cashier" selected="@(ViewBag.CurrentRole?.ToString() == "Cashier")">Cashier</option>
+                    <option value="Client" selected="@(ViewBag.CurrentRole?.ToString() == "Client")">Client</option>
+                </select>
+            </form>
+            <a asp-controller="User" asp-action="Create" class="btn-artemis btn-primary-artemis">
+                <i class="fa-solid fa-plus"></i> + New User
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="artemis-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>ID Number</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.Items)
+                {
+                    <tr>
+                        <td><strong>@user.UserName</strong></td>
+                        <td>@user.FirstName @user.LastName</td>
+                        <td style="letter-spacing:1px">@user.Cedula</td>
+                        <td>@user.Email</td>
+                        <td>
+                            @if (user.Role.ToString() == "Admin")
+                            {
+                                <span class="badge-status badge-active"><i class="fa-solid fa-shield-halved me-1"></i>Admin</span>
+                            }
+                            else if (user.Role.ToString() == "Cashier")
+                            {
+                                <span class="badge-status badge-pending"><i class="fa-solid fa-cash-register me-1"></i>Cashier</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status" style="background:#f0fdf4; color:#166534">
+                                    <i class="fa-solid fa-user me-1"></i>Client
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (user.IsActive)
+                            {
+                                <span class="badge-status badge-active">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-inactive">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a asp-controller="User" asp-action="Edit" asp-route-id="@user.Id"
+                                   class="btn-artemis btn-outline-artemis" style="padding:5px 10px; font-size:.78rem">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                                @if (user.Id != ViewBag.CurrentUserId)
+                                {
+                                    <form asp-controller="User" asp-action="ToggleStatus" method="post"
+                                          onsubmit="return confirm('@(user.IsActive ? "Do you want to deactivate this user?" : "Do you want to activate this user?")')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <input type="hidden" name="activate" value="@(!user.IsActive)" />
+                                        <button type="submit" class="btn-artemis @(user.IsActive ? "btn-danger-artemis" : "btn-gold-artemis")"
+                                                style="padding:5px 10px; font-size:.78rem">
+                                            <i class="fa-solid @(user.IsActive ? "fa-ban" : "fa-check")"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="d-flex justify-content-center py-3">
+            <ul class="pagination pagination-artemis">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : "")">
+                        <a class="page-link" asp-controller="User" asp-action="Index" asp-route-page="@i">@i</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>

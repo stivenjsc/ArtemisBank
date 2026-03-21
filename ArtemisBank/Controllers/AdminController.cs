@@ -3,7 +3,7 @@ using ArtemisBank.Core.Application.ViewModels.Dashboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ArtemisBank.Controllers.Roles
+namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class AdminController(IDashboardService dashboardService) : Controller

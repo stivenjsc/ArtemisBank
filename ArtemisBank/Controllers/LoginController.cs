@@ -3,7 +3,7 @@ using ArtemisBank.Core.Application.ViewModels.User;
 using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ArtemisBank.Controllers.Login
+namespace ArtemisBank.Controllers
 {
     public class LoginController(IUserService userService) : Controller
     {

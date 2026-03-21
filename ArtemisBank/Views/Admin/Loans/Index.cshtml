@@ -1,0 +1,93 @@
+﻿@model PaginatedResult<LoanDto>
+@{
+    ViewData["Title"] = "Loan Management";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Admin" asp-action="Index">Home</a> / Loans
+</div>
+
+<div class="table-card">
+    <div class="table-card-header">
+        <h5>
+            <i class="fa-solid fa-file-invoice-dollar me-2" style="color:var(--emerald-600)"></i>
+            Registered Loans
+        </h5>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <form method="get" asp-controller="Loan" asp-action="Index" class="d-flex gap-2">
+                <input type="text" name="cedula" value="@ViewBag.CurrentCedula" class="form-control form-control-sm" placeholder="Search ID..." style="width:170px" />
+                <select name="status" class="form-select form-select-sm" style="width:140px">
+                    <option value="">All</option>
+                    <option value="Active" selected="@(ViewBag.CurrentStatus?.ToString() == "Active")">Active</option>
+                    <option value="Completed" selected="@(ViewBag.CurrentStatus?.ToString() == "Completed")">Completed</option>
+                </select>
+                <button type="submit" class="btn-artemis btn-outline-artemis" style="padding:6px 12px">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+            <a asp-controller="Loan" asp-action="SelectClient" class="btn-artemis btn-primary-artemis">
+                <i class="fa-solid fa-plus"></i> Assign Loan
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="artemis-table">
+            <thead>
+                <tr>
+                    <th>Loan No.</th>
+                    <th>Client</th>
+                    <th>Principal</th>
+                    <th>Installments</th>
+                    <th>Paid</th>
+                    <th>Pending</th>
+                    <th>Rate</th>
+                    <th>Term</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var loan in Model.Items)
+                {
+                    <tr>
+                        <td><code style="font-size:.8rem">@loan.LoanNumber</code></td>
+                        <td>@loan.ClientFullName</td>
+                        <td><span class="money-value">RD$ @loan.Amount.ToString("N2")</span></td>
+                        <td class="text-center">@loan.TotalInstallments</td>
+                        <td class="text-center">@loan.PaidInstallments</td>
+                        <td>
+                            <span class="money-value" style="color:var(--danger)">
+                                RD$ @loan.PendingAmount.ToString("N2")
+                            </span>
+                        </td>
+                        <td>@loan.AnualInterestRate%</td>
+                        <td>@loan.TermInMonths m</td>
+                        <td>
+                            @if (loan.IsOnTime)
+                            {
+                                <span class="badge-status badge-active">Up to date</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-overdue">Overdue</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a asp-controller="Loan" asp-action="Detail" asp-route-id="@loan.Id"
+                                   class="btn-artemis btn-outline-artemis" style="padding:5px 10px; font-size:.78rem">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <a asp-controller="Loan" asp-action="EditRate" asp-route-id="@loan.Id"
+                                   class="btn-artemis btn-gold-artemis" style="padding:5px 10px; font-size:.78rem">
+                                    <i class="fa-solid fa-percent"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -5,6 +5,7 @@ namespace ArtemisBank.Core.Application.ViewModels.User
 {
     public class SaveUserViewModel
     {
+        public int Id { get; set; }
         [Required(ErrorMessage = "El nombre es requerido.")]
         [StringLength(50, ErrorMessage = "El nombre no puede exceder los {1} caracteres.")]
         public string FirstName { get; set; } = string.Empty;
@@ -42,6 +43,7 @@ namespace ArtemisBank.Core.Application.ViewModels.User
         [DataType(DataType.Currency)]
         [Range(0, double.MaxValue, ErrorMessage = "El monto inicial debe ser un valor positivo.")]
         public decimal? InitialAmount { get; set; }
+        public decimal? TotalDebt { get; set; }
 
         public bool HasError { get; set; }
         public string? Error { get; set; }

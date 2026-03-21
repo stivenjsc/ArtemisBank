@@ -17,7 +17,17 @@ namespace ArtemisBank.Core.Application.Mappings
         {
             CreateMap<SavingsAccount, SavingsAccountDto>().ReverseMap();
             CreateMap<CreditCard, CreditCardDto>().ReverseMap();
-            CreateMap<Loan, LoanDto>().ReverseMap();
+
+            #region Loan Mapping
+            CreateMap<Loan, LoanDto>()
+            .ForMember(dest => dest.TotalInstallments, opt => opt.MapFrom(src => src.Installments.Count))
+            .ForMember(dest => dest.PaidInstallments, opt => opt.MapFrom(src => src.Installments
+                .Count(x => x.AmountPaid >= x.InstallmentAmount)))
+            .ForMember(dest => dest.PendingAmount, opt => opt.MapFrom(src => src.Installments
+                .Where(x => x.AmountPaid < x.InstallmentAmount).Sum(x => x.InstallmentAmount - x.AmountPaid)))
+            .ForMember(dest => dest.IsOnTime, opt => opt.MapFrom(src => !src.Installments.Any(x => x.IsOverdue)));
+            #endregion
+
             CreateMap<Transaction, TransactionDto>().ReverseMap();
             CreateMap<Beneficiary, BeneficiaryDto>().ReverseMap();
             CreateMap<Commerce, CommerceDto>().ReverseMap();

@@ -1,0 +1,111 @@
+﻿@model LoanDetailViewModel
+@{
+    ViewData["Title"] = "Amortization Table";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Admin" asp-action="Index">Home</a> /
+    <a asp-controller="Loan" asp-action="Index">Loans</a> / Details
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Loan No.</div>
+            <div class="stat-value" style="font-size:1.2rem; letter-spacing:2px">@Model.Loan.LoanNumber</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Borrowed Principal</div>
+            <div class="stat-value money">@Model.Loan.Amount.ToString("N2")</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card gold">
+            <div class="stat-label">Pending Amount</div>
+            <div class="stat-value money" style="color:var(--danger)">@Model.TotalPendingAmount.ToString("N2")</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Paid Installments</div>
+            <div class="stat-value">@Model.PaidInstallments / @Model.TotalInstallments</div>
+        </div>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="table-card-header">
+        <h5>
+            <i class="fa-solid fa-table me-2" style="color:var(--emerald-600)"></i>
+            Amortization — @Model.Loan.ClientFullName
+        </h5>
+        <a asp-controller="Loan" asp-action="Index" class="btn-artemis btn-ghost-artemis">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="artemis-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Due Date</th>
+                    <th>Installment Value</th>
+                    <th>Amount Paid</th>
+                    <th>Status</th>
+                    <th>Arrears</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var inst in Model.Installments)
+                {
+                    <tr class="@(inst.Status.ToString("N2") == "Paid" ? "amort-row-paid" : "") @(inst.IsOverdue ? "amort-row-overdue" : "")">
+                        <td>@inst.InstallmentNumber</td>
+                        <td>@inst.DueDate.ToString("MM/dd/yyyy")</td>
+                        <td>
+                            <span class="money-value">RD$ @inst.InstallmentAmount.ToString("N2")</span>
+                        </td>
+                        <td>
+                            @if (inst.AmountPaid > 0)
+                            {
+                                <span class="money-value" style="color:var(--emerald-700)">
+                                    RD$ @inst.AmountPaid.ToString("N2")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (inst.Status.ToString("N2") == "Paid")
+                            {
+                                <span class="badge-status badge-paid">Paid</span>
+                            }
+                            else if (inst.IsOverdue)
+                            {
+                                <span class="badge-status badge-overdue">Overdue</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-pending">Pending</span>
+                            }
+                        </td>
+                        <td>
+                            @if (inst.IsOverdue)
+                            {
+                                <i class="fa-solid fa-triangle-exclamation" style="color:var(--warning)"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-check" style="color:var(--emerald-500)"></i>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

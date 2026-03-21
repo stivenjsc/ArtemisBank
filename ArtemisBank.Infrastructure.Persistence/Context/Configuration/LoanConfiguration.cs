@@ -22,7 +22,14 @@ namespace ArtemisBank.Infrastructure.Persistence.Context.Configuration
             builder.Property(l => l.Status).IsRequired().HasConversion<string>().HasMaxLength(20);
             builder.Property(l => l.CreatedAt).IsRequired();
             #endregion
-            
+
+            #region relationships
+            builder.HasMany(l => l.Installments)
+                   .WithOne() 
+                   .HasForeignKey(li => li.LoanId)
+                   .OnDelete(DeleteBehavior.Cascade);
+            #endregion
+
             builder.HasIndex(l => l.Id).IsUnique();
         }
     }

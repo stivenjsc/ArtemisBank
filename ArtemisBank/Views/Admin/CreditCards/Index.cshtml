@@ -1,0 +1,96 @@
+﻿@model PaginatedResult<CreditCardDto>
+@{
+    ViewData["Title"] = "Credit Card Management";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Admin" asp-action="Index">Home</a> / Credit Cards
+</div>
+
+<div class="table-card">
+    <div class="table-card-header">
+        <h5>
+            <i class="fa-solid fa-credit-card me-2" style="color:var(--emerald-600)"></i>
+            Credit Cards
+        </h5>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <form method="get" asp-controller="CreditCard" asp-action="Index" class="d-flex gap-2">
+                <input type="text" name="cedula" value="@ViewBag.CurrentCedula" class="form-control form-control-sm" placeholder="Search ID..." style="width:170px" />
+                <select name="status" class="form-select form-select-sm" style="width:130px">
+                    <option value="">All</option>
+                    <option value="Active">Active</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <button type="submit" class="btn-artemis btn-outline-artemis" style="padding:6px 12px">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+            <a asp-controller="CreditCard" asp-action="Assign" class="btn-artemis btn-primary-artemis">
+                <i class="fa-solid fa-plus"></i> Assign Card
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="artemis-table">
+            <thead>
+                <tr>
+                    <th>Card No.</th>
+                    <th>Client</th>
+                    <th>Limit</th>
+                    <th>Expiration</th>
+                    <th>Owed</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var card in Model.Items)
+                {
+                    <tr>
+                        <td style="font-family:'DM Sans',sans-serif; letter-spacing:2px; font-size:.82rem">
+                            **** **** **** @card.CardNumber.Substring(12)
+                        </td>
+                        <td>@card.ClientFullName</td>
+                        <td><span class="money-value">RD$ @card.CreditLimit.ToString("N2")</span></td>
+                        <td>@card.ExpirationDate</td>
+                        <td>
+                            <span class="money-value @(card.AmountOwed > 0 ? "red" : "green")">
+                                RD$ @card.AmountOwed.ToString("N2")
+                            </span>
+                        </td>
+                        <td>
+                            @if (card.Status.ToString("N2") == "Active")
+                            {
+                                <span class="badge-status badge-active">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-inactive">Cancelled</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a asp-controller="CreditCard" asp-action="Detail" asp-route-id="@card.Id"
+                                   class="btn-artemis btn-outline-artemis" style="padding:5px 10px; font-size:.78rem">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                @if (card.Status.ToString("N2") == "Active")
+                                {
+                                    <a asp-controller="CreditCard" asp-action="EditLimit" asp-route-id="@card.Id"
+                                       class="btn-artemis btn-gold-artemis" style="padding:5px 10px; font-size:.78rem">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                    <a asp-controller="CreditCard" asp-action="Cancel" asp-route-id="@card.Id"
+                                       class="btn-artemis btn-danger-artemis" style="padding:5px 10px; font-size:.78rem">
+                                        <i class="fa-solid fa-ban"></i>
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

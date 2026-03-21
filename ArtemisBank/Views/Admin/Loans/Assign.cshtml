@@ -1,0 +1,83 @@
+﻿@model AssignLoanViewModel
+@{
+    ViewData["Title"] = "Assign Loan — Configuration";
+}
+
+@if (Model.IsHighRisk)
+{
+    <div class="risk-banner mb-4">
+        <div class="risk-banner-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+            <div class="risk-banner-title">High-risk Client</div>
+            <div class="risk-banner-text">@Model.RiskMessage</div>
+        </div>
+    </div>
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="form-card">
+            <h5 class="mb-4" style="font-family:'Playfair Display',serif">
+                <i class="fa-solid fa-sliders me-2" style="color:var(--emerald-600)"></i>
+                Configure Loan — @Model.ClientName
+            </h5>
+
+            <form asp-controller="Loan" asp-action="Assign" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ClientId" />
+                <input type="hidden" asp-for="ClientName" />
+                <input type="hidden" asp-for="AverageDebt" />
+                <input type="hidden" asp-for="CurrentDebt" />
+
+                @if (Model.IsHighRisk)
+                {
+                    <div class="mb-3 p-3 rounded-3" style="background:#fff8f0; border:1px solid #fed7aa">
+                        <label class="form-check-label d-flex align-items-center gap-2" style="cursor:pointer">
+                            <input type="checkbox" name="RiskConfirmed" value="true" class="form-check-input mt-0" style="width:18px; height:18px" />
+                            <span style="font-size:.85rem; color:#92400e">I confirm that I want to assign this loan despite the high risk</span>
+                        </label>
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label">Loan Term</label>
+                    <select asp-for="TermInMonths" class="form-select">
+                        <option value="">Select term</option>
+                        @foreach (var term in new[] { 6, 12, 18, 24, 30, 36, 42, 48, 54, 60 })
+                        {
+                            <option value="@term">@term months</option>
+                        }
+                    </select>
+                    <span asp-validation-for="TermInMonths" class="text-danger" style="font-size:.78rem"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Loan Amount</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">RD$</span>
+                        <input asp-for="Amount" type="number" step="0.01" min="1" class="form-control" placeholder="0.00" />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Annual Interest Rate (%)</label>
+                    <div class="input-group">
+                        <input asp-for="AnnualInterestRate" type="number" step="0.01" min="0" class="form-control" placeholder="12.00" />
+                        <span class="input-group-text bg-white">%</span>
+                    </div>
+                </div>
+
+                <hr class="divider" />
+
+                <div class="d-flex gap-2 justify-content-between">
+                    <a asp-controller="Loan" asp-action="SelectClient" class="btn-artemis btn-ghost-artemis">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </a>
+                    <button type="submit" class="btn-artemis btn-primary-artemis">
+                        <i class="fa-solid fa-check"></i> @(Model.IsHighRisk ? "Assign Anyway" : "Assign Loan")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

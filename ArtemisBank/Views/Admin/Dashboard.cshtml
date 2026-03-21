@@ -1,0 +1,75 @@
+﻿@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <span>Home</span> / Dashboard
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+            <div class="stat-label">Transactions today</div>
+            <div class="stat-value">@Model.TodayTransactions</div>
+            <div class="stat-sub">Historical total: <strong>@Model.TotalTransactions</strong></div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card gold">
+            <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
+            <div class="stat-label">Payments today</div>
+            <div class="stat-value">@Model.TotalDailyPayments</div>
+            <div class="stat-sub">Historical total: <strong>@Model.TotalDailyPayments</strong></div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-label">Active clients</div>
+            <div class="stat-value">@Model.TotalActiveClients</div>
+            <div class="stat-sub">Inactive: <span class="down">@Model.TotalInactiveClients</span></div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card gold">
+            <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+            <div class="stat-label">Assigned products</div>
+            <div class="stat-value">@Model.TotalProducts</div>
+            <div class="stat-sub">Accounts + Loans + Cards</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+            <div class="stat-label">Current loans</div>
+            <div class="stat-value">@Model.ActiveLoans</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-credit-card"></i></div>
+            <div class="stat-label">Active cards</div>
+            <div class="stat-value">@Model.ActiveCreditCards</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+            <div class="stat-label">Savings accounts</div>
+            <div class="stat-value">@Model.TotalSavingsAccounts</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card danger">
+            <div class="stat-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="stat-label">Average debt</div>
+            <div class="stat-value money">@Model.AverageDebt.ToString("N2")</div>
+            <div class="stat-sub">Per active client</div>
+        </div>
+    </div>
+</div>

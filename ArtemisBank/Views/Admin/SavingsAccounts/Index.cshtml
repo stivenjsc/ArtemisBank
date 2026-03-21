@@ -1,0 +1,102 @@
+﻿@model PaginatedResult<SavingsAccountDto>
+@{
+    ViewData["Title"] = "Savings Account Management";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Admin" asp-action="Index">Home</a> / Savings Accounts
+</div>
+
+<div class="table-card">
+    <div class="table-card-header">
+        <h5>
+            <i class="fa-solid fa-piggy-bank me-2" style="color:var(--emerald-600)"></i>
+            Savings Accounts
+        </h5>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <form method="get" asp-controller="SavingsAccount" asp-action="Index" class="d-flex gap-2">
+                <input type="text" name="cedula" value="@ViewBag.CurrentCedula" class="form-control form-control-sm" placeholder="Search ID..." style="width:160px" />
+                <select name="status" class="form-select form-select-sm" style="width:110px">
+                    <option value="">All</option>
+                    <option value="Active">Active</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <select name="type" class="form-select form-select-sm" style="width:120px">
+                    <option value="">All types</option>
+                    <option value="Main">Main</option>
+                    <option value="Secondary">Secondary</option>
+                </select>
+                <button type="submit" class="btn-artemis btn-outline-artemis" style="padding:6px 12px">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+            <a asp-controller="SavingsAccount" asp-action="SelectClient" class="btn-artemis btn-primary-artemis">
+                <i class="fa-solid fa-plus"></i> Assign Account
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="artemis-table">
+            <thead>
+                <tr>
+                    <th>Account No.</th>
+                    <th>Client</th>
+                    <th>Balance</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var acc in Model.Items)
+                {
+                    <tr>
+                        <td style="letter-spacing:1px; font-family:'DM Sans',sans-serif">@acc.AccountNumber</td>
+                        <td>@acc.OwnerFullName</td>
+                        <td>
+                            <span class="money-value" style="color:var(--emerald-700)">
+                                RD$ @acc.Balance.ToString("N2")
+                            </span>
+                        </td>
+                        <td>
+                            @if (acc.Type.ToString("N2") == "Primary")
+                            {
+                                <span class="badge-status badge-active">Primary</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-pending">Secondary</span>
+                            }
+                        </td>
+                        <td>
+                            @if (acc.Status.ToString("N2") == "Active")
+                            {
+                                <span class="badge-status badge-active">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-inactive">Cancelled</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a asp-controller="SavingsAccount" asp-action="Detail" asp-route-accountNumber="@acc.AccountNumber"
+                                   class="btn-artemis btn-outline-artemis" style="padding:5px 10px; font-size:.78rem">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                @if (acc.Type.ToString("N2") == "Secondary" && acc.Status.ToString("N2") == "Active")
+                                {
+                                    <a asp-controller="SavingsAccount" asp-action="Cancel" asp-route-accountNumber="@acc.AccountNumber"
+                                       class="btn-artemis btn-danger-artemis" style="padding:5px 10px; font-size:.78rem">
+                                        <i class="fa-solid fa-ban"></i>
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

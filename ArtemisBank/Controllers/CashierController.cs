@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace ArtemisBank.Controllers.Roles
+namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = nameof(UserRole.Cashier))]
     public class CashierController( ITransactionService transactionService, ISavingsAccountService savingsAccountService, ICreditCardService creditCardService,

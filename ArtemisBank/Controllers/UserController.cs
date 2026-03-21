@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace ArtemisBank.Controllers.Login
+namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = nameof(UserRole.Admin))]
     public class UserController(IUserService userService, ISavingsAccountService savingsAccountService) : Controller
