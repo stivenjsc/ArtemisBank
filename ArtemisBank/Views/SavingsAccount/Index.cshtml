@@ -4,7 +4,7 @@
 }
 
 <div class="breadcrumb-artemis mb-3">
-    <a asp-controller="Admin" asp-action="Index">Home</a> / Savings Accounts
+    <a asp-controller="Admin" asp-action="Dashboard">Home</a> / Savings Accounts
 </div>
 
 <div class="table-card">
@@ -19,11 +19,11 @@
                 <select name="status" class="form-select form-select-sm" style="width:110px">
                     <option value="">All</option>
                     <option value="Active">Active</option>
-                    <option value="Cancelled">Cancelled</option>
+                    <option value="Inactive">Cancelled</option>
                 </select>
                 <select name="type" class="form-select form-select-sm" style="width:120px">
                     <option value="">All types</option>
-                    <option value="Main">Main</option>
+                    <option value="Primary">Main</option>
                     <option value="Secondary">Secondary</option>
                 </select>
                 <button type="submit" class="btn-artemis btn-outline-artemis" style="padding:6px 12px">

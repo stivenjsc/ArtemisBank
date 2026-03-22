@@ -1,4 +1,4 @@
-﻿using ArtemisBank.Core.Application.ViewModels.User;
+﻿using ArtemisBank.Core.Application.DTOs.User;
 using System.ComponentModel.DataAnnotations;
 
 namespace ArtemisBank.Core.Application.ViewModels.Client
@@ -10,7 +10,7 @@ namespace ArtemisBank.Core.Application.ViewModels.Client
         public decimal? AverageDebt { get; set; }
 
         [Required(ErrorMessage = "At least one client must be selected")]
-        public IEnumerable<SaveUserViewModel>? Clients { get; set; }
+        public IEnumerable<UserDto>? Clients { get; set; }
         [Required(ErrorMessage = "Please select a client")]
         public string? SelectedClientId { get; set; }
 

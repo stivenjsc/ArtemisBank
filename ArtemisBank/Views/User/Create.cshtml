@@ -4,7 +4,7 @@
 }
 
 <div class="breadcrumb-artemis mb-3">
-    <a asp-controller="Admin" asp-action="Index">Home</a> /
+    <a asp-controller="Admin" asp-action="Dashboard">Home</a> /
     <a asp-controller="User" asp-action="Index">Users</a> / Create
 </div>
 
@@ -26,12 +26,12 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">First Name</label>
-                        <input asp-for="FirstName" class="form-control" placeholder="John" />
+                        <input asp-for="FirstName" class="form-control" placeholder="Maria" />
                         <span asp-validation-for="FirstName" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Last Name</label>
-                        <input asp-for="LastName" class="form-control" placeholder="Doe" />
+                        <input asp-for="LastName" class="form-control" placeholder="Santos" />
                         <span asp-validation-for="LastName" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     <div class="col-md-6">
@@ -46,16 +46,16 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Username</label>
-                        <input asp-for="Username" class="form-control" placeholder="johnd" />
+                        <input asp-for="Username" class="form-control" placeholder="marias" />
                         <span asp-validation-for="Username" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">User Type</label>
                         <select asp-for="Role" class="form-select" id="roleSelect">
                             <option value="">Select role</option>
-                            <option value="Administrador">Administrator</option>
-                            <option value="Cajero">Cashier</option>
-                            <option value="Cliente">Client</option>
+                            <option value="Admin">Administrator</option>
+                            <option value="Cashier">Cashier</option>
+                            <option value="Client">Client</option>
                         </select>
                         <span asp-validation-for="Role" class="text-danger" style="font-size:.78rem"></span>
                     </div>
@@ -92,7 +92,7 @@
                         <i class="fa-solid fa-arrow-left"></i> Cancel
                     </a>
                     <button type="submit" class="btn-artemis btn-primary-artemis">
-                        <i class="fa-solid fa-floppy-disk"></i> + Create User
+                        <i class="fa-solid fa-floppy-disk"></i> Create User
                     </button>
                 </div>
             </form>

@@ -1,8 +1,9 @@
 using ArtemisBank.Core.Application.DTOs.Loan;
-using ArtemisBank.Core.Application.ViewModels.User;
+using ArtemisBank.Core.Application.DTOs.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Application.ViewModels.Client;
 using ArtemisBank.Core.Application.ViewModels.Loan;
+using ArtemisBank.Core.Application.ViewModels.User;
 using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -63,7 +64,7 @@ namespace ArtemisBank.Controllers
             var vm = new SelectClientViewModel
             {
                 AverageDebt = averageDebt,
-                Clients = (IEnumerable<SaveUserViewModel>)clients,
+                Clients = clients,
                 CurrentCedula = cedula
             };
 
@@ -76,7 +77,7 @@ namespace ArtemisBank.Controllers
         {
             if (string.IsNullOrWhiteSpace(vm.SelectedClientId))
             {
-                vm.Clients = (IEnumerable<SaveUserViewModel>)await _userService.GetActiveClientsWithoutLoanAsync(vm.CurrentCedula);
+                vm.Clients = await _userService.GetActiveClientsWithoutLoanAsync(vm.CurrentCedula);
                 ViewBag.Error = "Please select a client.";
                 return View(vm);
             }

@@ -20,7 +20,7 @@
         @if (User.IsInRole("Admin"))
         {
             <div class="nav-section-label">Principal</div>
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" asp-controller="Admin" asp-action="Index">
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" asp-controller="Admin" asp-action="Dashboard">
                 <i class="fa-solid fa-gauge"></i> Dashboard
             </a>
             <div class="nav-section-label">Gestión</div>
