@@ -43,7 +43,6 @@ namespace ArtemisBank.Core.Application.ViewModels.User
         [DataType(DataType.Currency)]
         [Range(0, double.MaxValue, ErrorMessage = "El monto inicial debe ser un valor positivo.")]
         public decimal? InitialAmount { get; set; }
-        public decimal? TotalDebt { get; set; }
 
         public bool HasError { get; set; }
         public string? Error { get; set; }
