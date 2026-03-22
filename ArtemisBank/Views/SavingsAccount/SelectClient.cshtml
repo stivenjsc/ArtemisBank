@@ -1,0 +1,45 @@
+﻿@model SelectClientForAccountViewModel
+@{
+    ViewData["Title"] = "Assign Account — Select Client";
+}
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Admin" asp-action="Dashboard">Home</a> /
+    <a asp-controller="SavingsAccount" asp-action="Index">Savings Accounts</a> / Assign
+</div>
+<form method="post" asp-controller="SavingsAccount" asp-action="SelectClient">
+    @Html.AntiForgeryToken()
+    <div class="table-card">
+        <div class="table-card-header">
+            <h5><i class="fa-solid fa-users me-2" style="color:var(--emerald-600)"></i>Select Client</h5>
+            <input type="text" name="cedula" value="@Model.CurrentCedula"
+                   class="form-control form-control-sm" placeholder="Search by ID..." style="width:200px" />
+        </div>
+        <div class="table-responsive">
+            <table class="artemis-table">
+                <thead><tr><th style="width:40px"></th><th>ID Number</th><th>Full Name</th><th>Email</th></tr></thead>
+                <tbody>
+                    @foreach (var client in Model.Clients)
+                    {
+                        <tr>
+                            <td>
+                                <input type="radio" name="selectedClientId" value="@client.Id"
+                                       class="form-check-input" style="width:18px;height:18px;accent-color:var(--emerald-600)" />
+                            </td>
+                            <td style="letter-spacing:1px">@client.Cedula</td>
+                            <td>@client.FirstName @client.LastName</td>
+                            <td>@client.Email</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+            <a asp-controller="SavingsAccount" asp-action="Index" class="btn-artemis btn-ghost-artemis">
+                <i class="fa-solid fa-arrow-left"></i> Cancelar
+            </a>
+            <button type="submit" class="btn-artemis btn-primary-artemis">
+                Next Step <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</form>

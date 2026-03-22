@@ -1,3 +1,4 @@
+using ArtemisBank.Core.Application.DTOs.User;
 using System.ComponentModel.DataAnnotations;
 
 namespace ArtemisBank.Core.Application.ViewModels.CreditCard
@@ -11,7 +12,9 @@ namespace ArtemisBank.Core.Application.ViewModels.CreditCard
         [DataType(DataType.Currency)]
         [Range(1, double.MaxValue, ErrorMessage = "El límite de crédito debe ser mayor a cero.")]
         public decimal CreditLimit { get; set; }
-
+        public decimal AverageDebt { get; set; }
+        public string? CurrentCedula { get; set; }
+        public IEnumerable<UserDto> Clients { get; set; } = [];
         public bool HasError { get; set; }
         public string? Error { get; set; }
     }

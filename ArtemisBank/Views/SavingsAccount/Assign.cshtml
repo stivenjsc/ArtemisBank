@@ -1,0 +1,47 @@
+﻿@model AssignSavingsAccountViewModel
+@{
+    ViewData["Title"] = "Assign Savings Account";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Admin" asp-action="Dashboard">Home</a> /
+    <a asp-controller="SavingsAccount" asp-action="Index">Savings Accounts</a> / Assign
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="form-card">
+            <h5 class="mb-4" style="font-family:'Playfair Display',serif">
+                <i class="fa-solid fa-piggy-bank me-2" style="color:var(--emerald-600)"></i>
+                Secondary account for @Model.ClientName
+            </h5>
+            <form asp-controller="SavingsAccount" asp-action="Assign" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ClientId" />
+                <input type="hidden" asp-for="ClientName" />
+
+                <div class="mb-4">
+                    <label class="form-label">Initial balance</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">RD$</span>
+                        <input asp-for="InitialBalance" type="number" step="0.01" min="0"
+                               class="form-control" placeholder="0.00" />
+                    </div>
+                    <small class="text-muted mt-1 d-block">Can be 0</small>
+                </div>
+
+                <hr class="divider" />
+
+                <div class="d-flex gap-2 justify-content-between">
+                    <a asp-controller="SavingsAccount" asp-action="SelectClient"
+                       class="btn-artemis btn-ghost-artemis">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </a>
+                    <button type="submit" class="btn-artemis btn-primary-artemis">
+                        <i class="fa-solid fa-check"></i> Assign account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
