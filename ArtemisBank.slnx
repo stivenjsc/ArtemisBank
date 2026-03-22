@@ -10,7 +10,9 @@
     <Project Path="ArtemisBank.Infrastructure.Shared/ArtemisBank.Infrastructure.Shared.csproj" />
   </Folder>
   <Folder Name="/Source/Presentation/" />
-  <Folder Name="/Source/Presentation/WebApi/" />
+  <Folder Name="/Source/Presentation/WebApi/">
+    <Project Path="Presentation/WebApi/ArtemisBank.WebAPI/ArtemisBank.Presentation.WebAPI.csproj" />
+  </Folder>
   <Folder Name="/Source/Presentation/WebApp/">
     <Project Path="ArtemisBank/ArtemisBank.csproj" />
   </Folder>
