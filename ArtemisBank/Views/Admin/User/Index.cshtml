@@ -17,7 +17,7 @@
             <form method="get" asp-controller="User" asp-action="Index" class="d-flex gap-2">
                 <select name="role" class="form-select form-select-sm" style="width:160px" onchange="this.form.submit()">
                     <option value="">All Roles</option>
-                    <option value="Admin" selected="@(ViewBag.CurrentRole?.ToString() == "Admini")">Administrator</option>
+                    <option value="Admin" selected="@(ViewBag.CurrentRole?.ToString() == "Admin")">Administrator</option>
                     <option value="Cashier" selected="@(ViewBag.CurrentRole?.ToString() == "Cashier")">Cashier</option>
                     <option value="Client" selected="@(ViewBag.CurrentRole?.ToString() == "Client")">Client</option>
                 </select>

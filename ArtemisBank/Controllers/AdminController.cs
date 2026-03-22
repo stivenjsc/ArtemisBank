@@ -10,7 +10,7 @@ namespace ArtemisBank.Controllers
     {
         private readonly IDashboardService _dashboardService = dashboardService;
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Dashboard()
         {
             var data = await _dashboardService.GetAdminDashboardAsync();
 

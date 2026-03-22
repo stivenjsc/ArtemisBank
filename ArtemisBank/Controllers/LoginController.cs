@@ -14,7 +14,7 @@ namespace ArtemisBank.Controllers
             if (User.Identity?.IsAuthenticated == true)
             {
                 if (User.IsInRole(nameof(UserRole.Admin)))
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Dashboard", "Admin");
 
                 if (User.IsInRole(nameof(UserRole.Cashier)))
                     return RedirectToAction("Index", "Cashier");
@@ -45,7 +45,7 @@ namespace ArtemisBank.Controllers
 
             return result.Role switch
             {
-                UserRole.Admin => RedirectToAction("Index", "Admin"),
+                UserRole.Admin => RedirectToAction("Dashboard", "Admin"),
                 UserRole.Cashier => RedirectToAction("Index", "Cashier"),
                 _ => RedirectToAction("Index", "Client")
             };
