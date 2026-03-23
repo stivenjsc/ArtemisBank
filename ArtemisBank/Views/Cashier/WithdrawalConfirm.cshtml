@@ -1,0 +1,47 @@
+﻿@model CashierWithdrawalViewModel
+@{
+    ViewData["Title"] = "Confirm Withdrawal";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-5">
+        <div class="confirm-card">
+            <div class="confirm-icon danger">
+                <i class="fa-solid fa-circle-question"></i>
+            </div>
+
+            <h4 class="text-center mb-1" style="font-family:'Playfair Display',serif">Confirm withdrawal</h4>
+            <p class="text-center text-muted mb-4" style="font-size:.85rem">Review details before confirming</p>
+
+            <div class="detail-box">
+                <div class="meta-row">
+                    <span class="meta-label">Holder</span>
+                    <span class="meta-value fw-600">@Model.AccountHolderName</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Source account</span>
+                    <span class="meta-value">@Model.AccountNumber</span>
+                </div>
+                <div class="meta-row" style="border:none">
+                    <span class="meta-label">Amount</span>
+                    <span class="meta-value" style="font-size:1.1rem;color:var(--danger);font-weight:700">RD$ @Model.Amount.ToString("N2")</span>
+                </div>
+            </div>
+
+            <form asp-controller="Cashier" asp-action="WithdrawalConfirm" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="AccountNumber" />
+                <input type="hidden" asp-for="Amount" />
+
+                <div class="d-flex gap-2">
+                    <a asp-controller="Cashier" asp-action="Index" class="btn-artemis btn-ghost-artemis flex-fill justify-content-center">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-artemis btn-danger-artemis flex-fill justify-content-center">
+                        <i class="fa-solid fa-check"></i> Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
