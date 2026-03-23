@@ -2,7 +2,6 @@ using ArtemisBank.Core.Application.DTOs.Account;
 using ArtemisBank.Core.Application.DTOs.Cashier;
 using ArtemisBank.Core.Application.DTOs.Transaction;
 using ArtemisBank.Core.Application.Interfaces.IServices;
-using ArtemisBank.Core.Domain.Entities;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Domain.Interfaces;
 using AutoMapper;
@@ -214,7 +213,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                     await _emailService.SendAsync(user.Email, "Deposit Received",
                         $"A deposit of {cashierDepositDto.Amount:C2} has been credited to your account {cashierDepositDto.AccountNumber}.");
                 }
-                catch { /*Login error via email but cannot reverse deposit */ }
+                catch { }
             }
         }
 
@@ -253,7 +252,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                     await _emailService.SendAsync(user.Email, "Withdrawal Notification",
                         $"A withdrawal of {dto.Amount:C2} has been processed from your account {dto.AccountNumber}.");
                 }
-                catch { /* Ignore email error to avoid breaking the transaction*/ }
+                catch { }
             }
         }
 
@@ -266,8 +265,8 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             if (card.Status != CardStatus.Active)
                 throw new InvalidOperationException("Cannot process payments for an inactive or cancelled card.");
 
-            decimal currentDebt = card.CreditLimit - card.AvailableBalance;
-            card.AvailableBalance += dto.Amount;
+            var actualPayment = Math.Min(dto.Amount, card.AmountOwed);
+            card.AmountOwed -= actualPayment;
             await _creditCardRepo.UpdateAsync(card);
 
             var transaction = new Transaction
@@ -289,7 +288,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                     await _emailService.SendAsync(user.Email, "Credit Card Payment Received",
                         $"A payment of {dto.Amount:C2} has been applied to your card ending in {card.CardNumber.Substring(card.CardNumber.Length - 4)}.");
                 }
-                catch { /* Ignore email error*/ }
+                catch { }
             }
         }
 

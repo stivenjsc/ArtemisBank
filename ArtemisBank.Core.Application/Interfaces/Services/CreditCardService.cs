@@ -160,13 +160,11 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             var card = await _repo.GetByIdAsync(cardId);
             if (card == null) throw new Exception("Credit card not found.");
 
-            decimal currentDebt = card.CreditLimit - card.AvailableBalance;
-            if (newCreditLimit < currentDebt)
+            if (newCreditLimit < card.AmountOwed)
             {
-                throw new InvalidOperationException($"The new limit cannot be lower than the current debt (${currentDebt:N2}).");
+                throw new InvalidOperationException($"The new limit cannot be lower than the current debt (${card.AmountOwed:N2}).");
             }
 
-            card.AvailableBalance = newCreditLimit - currentDebt;
             card.CreditLimit = newCreditLimit;
             await _repo.UpdateAsync(card);
 
@@ -181,14 +179,12 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
             if (card.Status == CardStatus.Cancelled) return;
 
-            decimal currentDebt = card.CreditLimit - card.AvailableBalance;
-            if (currentDebt > 0)
+            if (card.AmountOwed > 0)
             {
-                throw new InvalidOperationException($"Cannot cancel card. Client owes ${currentDebt:N2}. The balance must be zero.");
+                throw new InvalidOperationException($"Cannot cancel card. Client owes ${card.AmountOwed:N2}. The balance must be zero.");
             }
 
             card.Status = CardStatus.Cancelled;
-            card.AvailableBalance = 0;
             card.CreditLimit = 0;
 
             await _repo.UpdateAsync(card);
