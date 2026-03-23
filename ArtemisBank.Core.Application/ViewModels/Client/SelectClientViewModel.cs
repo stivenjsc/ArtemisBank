@@ -15,8 +15,8 @@ namespace ArtemisBank.Core.Application.ViewModels.Client
         public string? SelectedClientId { get; set; }
 
         [Required(ErrorMessage = "ID number (Cedula) is required")]
-        [StringLength(13, MinimumLength = 13, ErrorMessage = "Cedula must be 123 characters long (including dashes)")]
-        [RegularExpression(@"^\d{3}-\d{7}-\d{1}$", ErrorMessage = "Invalid Cedula format. Use XXX-XXXXXXX-X")]
+        [StringLength(11, MinimumLength = 11, ErrorMessage = "Cedula must be 11 characters long")]
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "Invalid Cedula format. Use XXXXXXXXXXX")]
         public string? CurrentCedula { get; set; }
     }
 }
