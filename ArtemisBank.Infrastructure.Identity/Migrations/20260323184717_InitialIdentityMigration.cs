@@ -18,6 +18,16 @@ namespace ArtemisBank.Infrastructure.Identity.Migrations
             migrationBuilder.AlterDatabase()
                 .Annotation("MySQL:Charset", "utf8mb4");
 
+            migrationBuilder.Sql(@"
+DROP TABLE IF EXISTS `identity`.`UserTokens`;
+DROP TABLE IF EXISTS `identity`.`UserRoles`;
+DROP TABLE IF EXISTS `identity`.`UserLogins`;
+DROP TABLE IF EXISTS `identity`.`UserClaims`;
+DROP TABLE IF EXISTS `identity`.`RoleClaims`;
+DROP TABLE IF EXISTS `identity`.`Users`;
+DROP TABLE IF EXISTS `identity`.`Roles`;
+");
+
             migrationBuilder.CreateTable(
                 name: "Roles",
                 schema: "identity",
