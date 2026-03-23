@@ -12,8 +12,8 @@ namespace ArtemisBank.Infrastructure.Persistence.Context.Configuration
             builder.HasKey(s => s.Id);
 
             #region properties
-            builder.Property(s => s.UserId).IsRequired();
-            builder.Property(s => s.CreatedByAdminId).IsRequired();
+            builder.Property(s => s.UserId).IsRequired().HasMaxLength(450);
+            builder.Property(s => s.CreatedByAdminId).IsRequired().HasMaxLength(450);
             builder.Property(s => s.AccountNumber).IsRequired().HasMaxLength(9);
             builder.Property(s => s.Balance).IsRequired().HasPrecision(18,2);
             builder.Property(s => s.Type).IsRequired().HasConversion<string>().HasMaxLength(20);

@@ -200,7 +200,7 @@ namespace ArtemisBank.Infrastructure.Persistence.Migrations
                     SourceAccountNumber = table.Column<string>(type: "varchar(9)", maxLength: 9, nullable: false),
                     DestinationAccountNumber = table.Column<string>(type: "varchar(9)", maxLength: 9, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    Description = table.Column<string>(type: "longtext", nullable: false)
+                    Description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
                 },
                 constraints: table =>
                 {

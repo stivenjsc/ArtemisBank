@@ -15,11 +15,13 @@ namespace ArtemisBank.Infrastructure.Persistence.Context.Configuration
             builder.Property(t => t.TransactionDate).IsRequired();
             builder.Property(t => t.Amount).IsRequired().HasPrecision(18, 2);
             builder.Property(t => t.Beneficiary).IsRequired().HasMaxLength(200);
+            builder.Property(t => t.Description).IsRequired().HasMaxLength(500);
             builder.Property(t => t.Type).IsRequired().HasConversion<string>().HasMaxLength(20);
             builder.Property(t => t.Origin).IsRequired().HasMaxLength(200);
             builder.Property(t => t.SourceAccountNumber).IsRequired().HasMaxLength(9);
             builder.Property(t => t.DestinationAccountNumber).IsRequired().HasMaxLength(9);
             builder.Property(t => t.Status).IsRequired().HasConversion<string>().HasMaxLength(20);
+            builder.Property(t => t.SavingAccountId).IsRequired();
             #endregion
 
             #region relationships
