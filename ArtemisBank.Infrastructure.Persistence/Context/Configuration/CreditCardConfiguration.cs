@@ -20,8 +20,8 @@ namespace ArtemisBank.Infrastructure.Persistence.Context.Configuration
             builder.Property(cc => cc.CVCHash).IsRequired().HasMaxLength(64);
             builder.Property(cc => cc.CreatedAt).IsRequired();
 
-            builder.Property(cc => cc.ClientId).IsRequired();
-            builder.Property(cc => cc.AssignedByAdminId).IsRequired();
+            builder.Property(cc => cc.ClientId).IsRequired().HasMaxLength(450);
+            builder.Property(cc => cc.AssignedByAdminId).IsRequired().HasMaxLength(450);
             #endregion
             
             builder.HasIndex(cc => cc.CardNumber).IsUnique();
