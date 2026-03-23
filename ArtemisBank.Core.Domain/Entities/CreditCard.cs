@@ -18,6 +18,6 @@ namespace ArtemisBank.Core.Domain.Entities
         // foreign key to the associated account
         public string ClientId { get; set; } = string.Empty;
         public string AssignedByAdminId { get; set; } = string.Empty;
-        public decimal AvailableBalance { get; set; }
+        public decimal AvailableBalance => CreditLimit - AmountOwed;
     }
 }
