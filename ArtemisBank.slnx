@@ -11,7 +11,7 @@
   </Folder>
   <Folder Name="/Source/Presentation/" />
   <Folder Name="/Source/Presentation/WebApi/">
-    <Project Path="Presentation/WebApi/ArtemisBank.WebAPI/ArtemisBank.Presentation.WebAPI.csproj" />
+    <Project Path="Presentation/WebApi/ArtemisBank.WebAPI/ArtemisBank.WebAPI.csproj" />
   </Folder>
   <Folder Name="/Source/Presentation/WebApp/">
     <Project Path="ArtemisBank/ArtemisBank.csproj" />
