@@ -344,7 +344,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 Description = $"Loan payment applied to {loan.LoanNumber}",
                 CreatedAt = DateTime.UtcNow
             });
-            var user = await _userService.GetByIdAsync(loan.UserId);
+            var user = await _userService.GetByIdAsync(loan.ClientId);
             await _emailService.SendAsync(user.Email, "Loan Payment Applied",
                 $"A payment of {totalActuallyPaid:C2} was applied to your loan {loan.LoanNumber}.");
         }

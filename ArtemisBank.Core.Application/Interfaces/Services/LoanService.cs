@@ -68,7 +68,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 TermInMonths = dto.TermInMonths,
                 Status = LoanStatus.Active,
                 CreatedAt = DateTime.UtcNow,
-                UserId = dto.ClientId,
+                ClientId = dto.ClientId,
                 AssignedByAdminId = string.Empty
             };
 

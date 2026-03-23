@@ -15,6 +15,5 @@ namespace ArtemisBank.Core.Domain.Entities
         // Foreign key to User
         public string UserId { get; set; } = string.Empty;
         public string? CreatedByAdminId { get; set; }
-        public bool IsPrimary { get; set; }
     }
 }

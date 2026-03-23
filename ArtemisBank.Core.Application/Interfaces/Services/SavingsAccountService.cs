@@ -213,7 +213,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             var secondaryAccount = await _repo.GetByAccountNumberAsync(accountNumber);
             if (secondaryAccount == null) throw new Exception("Account not found.");
 
-            if (secondaryAccount.IsPrimary)
+            if (secondaryAccount.Type == AccountType.Primary)
                 throw new InvalidOperationException("The primary account cannot be cancelled.");
             var primaryAccount = await _repo.GetPrimaryAccountByClientIdAsync(secondaryAccount.UserId);
             if (primaryAccount == null)

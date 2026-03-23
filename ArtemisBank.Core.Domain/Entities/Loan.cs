@@ -14,7 +14,7 @@ namespace ArtemisBank.Core.Domain.Entities
         public ICollection<LoanInstallment> Installments { get; set; } = [];
 
         // foreign keys to user
-        public string UserId { get; set; } = string.Empty;
+        public string ClientId { get; set; } = string.Empty;
         public string AssignedByAdminId { get; set; } = string.Empty;
     }
 }

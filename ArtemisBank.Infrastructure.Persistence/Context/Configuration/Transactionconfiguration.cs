@@ -17,6 +17,8 @@ namespace ArtemisBank.Infrastructure.Persistence.Context.Configuration
             builder.Property(t => t.Beneficiary).IsRequired().HasMaxLength(200);
             builder.Property(t => t.Type).IsRequired().HasConversion<string>().HasMaxLength(20);
             builder.Property(t => t.Origin).IsRequired().HasMaxLength(200);
+            builder.Property(t => t.SourceAccountNumber).IsRequired().HasMaxLength(9);
+            builder.Property(t => t.DestinationAccountNumber).IsRequired().HasMaxLength(9);
             builder.Property(t => t.Status).IsRequired().HasConversion<string>().HasMaxLength(20);
             #endregion
 

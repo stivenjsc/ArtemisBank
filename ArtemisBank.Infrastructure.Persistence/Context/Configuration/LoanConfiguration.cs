@@ -12,7 +12,7 @@ namespace ArtemisBank.Infrastructure.Persistence.Context.Configuration
             builder.HasKey(l => l.Id);
 
             #region properties
-            builder.Property(l => l.UserId).IsRequired();
+            builder.Property(l => l.ClientId).IsRequired();
             builder.Property(l => l.AssignedByAdminId).IsRequired();
 
             builder.Property(l => l.LoanNumber).IsRequired().HasMaxLength(9);
@@ -30,7 +30,7 @@ namespace ArtemisBank.Infrastructure.Persistence.Context.Configuration
                    .OnDelete(DeleteBehavior.Cascade);
             #endregion
 
-            builder.HasIndex(l => l.Id).IsUnique();
+            builder.HasIndex(l => l.LoanNumber).IsUnique();
         }
     }
 }

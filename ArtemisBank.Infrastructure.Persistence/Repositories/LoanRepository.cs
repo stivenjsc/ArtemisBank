@@ -13,18 +13,18 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
         private readonly IdentityContext _identityContext = identityContext;
         public async Task<bool> ClientHasActiveLoanAsync(string clientId)
         {
-            return await _dbSet.AnyAsync(l => l.UserId == clientId && l.Status == LoanStatus.Active);
+            return await _dbSet.AnyAsync(l => l.ClientId == clientId && l.Status == LoanStatus.Active);
         }
 
         public async Task<IEnumerable<Loan>> GetActiveByClientIdAsync(string clientId)
         {
-            return await _dbSet.Where(l => l.UserId == clientId && l.Status == LoanStatus.Active)
+            return await _dbSet.Where(l => l.ClientId == clientId && l.Status == LoanStatus.Active)
                 .OrderByDescending(l => l.CreatedAt).ToListAsync();
         }
 
         public async Task<Loan?> GetActiveLoanByClientIdAsync(string clientId)
         {
-            return await _dbSet.Include(l => l.Installments).FirstOrDefaultAsync(l => l.UserId == clientId && l.Status == LoanStatus.Active);
+            return await _dbSet.Include(l => l.Installments).FirstOrDefaultAsync(l => l.ClientId == clientId && l.Status == LoanStatus.Active);
         }
 
         public async Task<IEnumerable<Loan>> GetAllByClientCedulaAsync(string cedula)
@@ -35,7 +35,7 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
             {
                 return [];
             }
-            return await _dbSet.AsNoTracking().Where(l => l.UserId == clientId)
+            return await _dbSet.AsNoTracking().Where(l => l.ClientId == clientId)
                 .OrderByDescending(l => l.Status == LoanStatus.Active).ThenByDescending(l=> l.CreatedAt).ToListAsync();
         }
 
@@ -52,7 +52,7 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
                 var clientId = await _identityContext.Users.Where(u => u.Cedula == cedula).Select(u => u.Id).FirstOrDefaultAsync();
                 if (clientId != null)
                 {
-                    query = query.Where(l => l.UserId == clientId);
+                    query = query.Where(l => l.ClientId == clientId);
                 }
                 else
                 {
@@ -67,7 +67,7 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
         public async Task<decimal> GetAverageDebtAsync()
         {
             // average debt = total debt of active loans / number of active loans
-            var clientWithDebt = await _dbSet.Where(l => l.Status == LoanStatus.Active).GroupBy(l => l.UserId)
+            var clientWithDebt = await _dbSet.Where(l => l.Status == LoanStatus.Active).GroupBy(l => l.ClientId)
                 .Select(a => a.Sum(l => l.Installments.Where(i => i.Status != InstallmentStatus.Paid)
                 .Sum(i => i.InstallmentAmount - i.AmountPaid))).ToListAsync();
 
@@ -89,7 +89,7 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
         public async Task<decimal> GetTotalDebtByClientIdAsync(string clientId)
         {
             // total debt = pending amount  + debt in credit cards
-            var loanDebt = await _dbSet.Where(l => l.UserId == clientId && l.Status == LoanStatus.Active)
+            var loanDebt = await _dbSet.Where(l => l.ClientId == clientId && l.Status == LoanStatus.Active)
                 .SelectMany(l => l.Installments).Where(i => i.Status != InstallmentStatus.Paid)
                 .SumAsync(i => i.InstallmentAmount - i.AmountPaid);
 
