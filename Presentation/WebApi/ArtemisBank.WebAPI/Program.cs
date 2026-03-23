@@ -16,6 +16,8 @@ builder.Services.AddSharedInfrastructure(builder.Configuration);
 builder.Services.AddApplicationLayer();
 builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperProfile));
 builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -28,6 +30,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.UseHealthChecks("/health");
 
 app.MapControllers();
 
