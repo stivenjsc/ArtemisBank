@@ -1,11 +1,12 @@
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Application.ViewModels.Dashboard;
+using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArtemisBank.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public class AdminController(IDashboardService dashboardService) : Controller
     {
         private readonly IDashboardService _dashboardService = dashboardService;
