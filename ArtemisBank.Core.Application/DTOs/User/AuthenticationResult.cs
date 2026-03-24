@@ -6,6 +6,7 @@ namespace ArtemisBank.Core.Application.DTOs.User
     {
         public bool Success { get; set; }
         public string UserId { get; set; } = string.Empty;
+        public int CommerceId { get; set; } 
         public string UserName { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;

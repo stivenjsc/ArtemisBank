@@ -1,8 +1,10 @@
-using ArtemisBank.Core.Application.Mappings;
 using ArtemisBank.Core.Application.IoC;
+using ArtemisBank.Core.Application.Mappings;
 using ArtemisBank.Infrastructure.Identity;
+using ArtemisBank.Infrastructure.Identity.Seeds;
 using ArtemisBank.Infrastructure.Persistence.IoC;
 using ArtemisBank.Infrastructure.Shared.IoC;
+using ArtemisBank.WebAPI.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,23 +14,35 @@ builder.Services.AddControllers();
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
 builder.Services.AddPersistenceInfrastructure(builder.Configuration);
 builder.Services.AddSharedInfrastructure(builder.Configuration);
-
 builder.Services.AddApplicationLayer();
+
 builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperProfile));
+
+builder.Services.AddJwtAuthenticationLayer(builder.Configuration);
+builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+});
+
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
-
+await app.SeedIdentityDataAsync();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseHealthChecks("/health");
 
