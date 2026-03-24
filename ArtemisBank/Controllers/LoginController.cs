@@ -43,6 +43,13 @@ namespace ArtemisBank.Controllers
                 return View(vm);
             }
 
+            if (result.Role == UserRole.Commerce)
+            {
+                vm.HasError = true;
+                vm.Error = "Commerce users cannot access the web system. Please use the API.";
+                return View(vm);
+            }
+
             return result.Role switch
             {
                 UserRole.Admin => RedirectToAction("Dashboard", "Admin"),
