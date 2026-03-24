@@ -1,0 +1,65 @@
+﻿@model CashierThirdPartyTransferViewModel
+@{
+    ViewData["Title"] = "Third-Party Transfer";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Cashier" asp-action="Index">Home</a> / Third-Party Transfer
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="form-card">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="stat-icon mb-0">
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0" style="font-family:'Playfair Display',serif">Third-Party Transfer</h4>
+                    <p class="text-muted mb-0" style="font-size:.82rem">Verify the details before continuing</p>
+                </div>
+            </div>
+            @if (Model.HasError)
+            {
+                <div class="alert-artemis alert-artemis-danger mb-3">
+                    <i class="fa-solid fa-circle-exclamation"></i> @Model.Error
+                </div>
+            }
+            <form asp-controller="Cashier" asp-action="ThirdPartyTransfer" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label">Source Account</label>
+                    <input asp-for="SourceAccountNumber" class="form-control" placeholder="9 digits" />
+                    <span asp-validation-for="SourceAccountNumber" class="text-danger" style="font-size:.78rem"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Transaction Amount</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">RD$</span>
+                        <input asp-for="Amount" type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" />
+                    </div>
+                    <span asp-validation-for="Amount" class="text-danger" style="font-size:.78rem"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Destination Account</label>
+                    <input asp-for="DestinationAccountNumber" class="form-control" placeholder="9 digits" />
+                    <span asp-validation-for="DestinationAccountNumber" class="text-danger" style="font-size:.78rem"></span>
+                </div>
+
+                <hr class="divider" />
+
+                <div class="d-flex gap-2 justify-content-between">
+                    <a asp-controller="Cashier" asp-action="Index" class="btn-artemis btn-ghost-artemis">
+                        <i class="fa-solid fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-artemis btn-primary-artemis">
+                        <i class="fa-solid fa-arrow-right"></i> Continue
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
