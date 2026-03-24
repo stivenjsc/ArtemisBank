@@ -159,7 +159,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
         private static string GenerateAccountNumber()
         {
-            return $"ATB{Random.Shared.Next(100000000, 999999999)}";
+            return Random.Shared.Next(100000000, 999999999).ToString();
         }
 
         public async Task<IEnumerable<TransactionDto>> GetTransactionsAsync(string accountNumber)
