@@ -3,7 +3,7 @@ using ArtemisBank.Core.Application.Interfaces.IServices;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ArtemisBank.WebAPI.Controllers.v1
+namespace ArtemisBank.WebAPI.Controllers
 {
     [ApiVersion("1.0")]
     public class CommerceController : BaseApiController
