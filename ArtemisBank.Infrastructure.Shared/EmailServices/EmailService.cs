@@ -41,7 +41,11 @@ namespace ArtemisBank.Infrastructure.Shared.EmailServices
 
             using var smtp = new SmtpClient();
 
-            await smtp.ConnectAsync( _settings.SmtpHost, _settings.SmtpPort,
+            smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+            await smtp.ConnectAsync(
+                _settings.SmtpHost,
+                _settings.SmtpPort,
                 _settings.UseSsl ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls
             );
 

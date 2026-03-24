@@ -2,6 +2,8 @@ using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Infrastructure.Identity.Context;
 using ArtemisBank.Infrastructure.Identity.Entities;
 using ArtemisBank.Infrastructure.Identity.Services;
+using ArtemisBank.Infrastructure.Shared.EmailServices;
+using ArtemisBank.Infrastructure.Shared.EmailServices.IEmailService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -60,7 +62,8 @@ namespace ArtemisBank.Infrastructure.Identity
 
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IJwtService, JwtService>();
-
+            services.AddTransient<ICorreoServices, EmailService>();
+            services.AddTransient<IEmailServices, EmailService>();
             #endregion
         }
         #endregion

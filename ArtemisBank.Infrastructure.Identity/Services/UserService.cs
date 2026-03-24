@@ -4,17 +4,20 @@ using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Domain.Interfaces;
 using ArtemisBank.Infrastructure.Identity.Entities;
+using ArtemisBank.Infrastructure.Shared.EmailServices;
+using ArtemisBank.Infrastructure.Shared.EmailServices.IEmailService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArtemisBank.Infrastructure.Identity.Services
 {
-    public class UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ILoanRepository loanRepository) : IUserService
+    public class UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ILoanRepository loanRepository,
+        ICorreoServices emailServices) : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
         private readonly ILoanRepository _loanRepository = loanRepository;
-
+        private readonly ICorreoServices _emailService = emailServices;
 
         public async Task<AuthenticationResult> AuthenticateAsync(string username, string password)
         {
@@ -86,7 +89,12 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             user.ActivationToken = token;
             await _userManager.UpdateAsync(user);
-
+            await _emailService.SendEmailAsync(new EmailRequest
+            {
+                To = email,
+                Subject = "Activate your ArtemisBank Account",
+                Body = $"Welcome! Please activate your account using this token: {token}"
+            });
             return true;
         }
 
@@ -120,6 +128,13 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             user.ActivationToken = token;
             await _userManager.UpdateAsync(user);
+
+            await _emailService.SendEmailAsync(new EmailRequest
+            {
+                To = email,
+                Subject = "ArtemisBank - Commerce Account Activation",
+                Body = $"Your commerce account is ready. Use this token to activate: {token}"
+            });
 
             return true;
         }
@@ -160,6 +175,13 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             user.ActivationToken = token;
             await _userManager.UpdateAsync(user);
+
+            await _emailService.SendEmailAsync(new EmailRequest
+            {
+                To = user.Email!,
+                Subject = "Reset your ArtemisBank Password",
+                Body = $"Click here or use this token to reset your password: {token}"
+            });
 
             return true;
         }
