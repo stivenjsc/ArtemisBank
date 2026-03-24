@@ -11,6 +11,7 @@ namespace ArtemisBank.Core.Application.DTOs.User
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public UserRole Role { get; set; }
+        public string? JwtToken { get; set; }
         public string? Error { get; set; }
     }
 }
