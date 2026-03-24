@@ -8,7 +8,7 @@
         <p class="text-muted mb-4">You do not have permission to access this section.</p>
         @if (User.IsInRole("Admin"))
         {
-            <a asp-controller="Admin" asp-action="Index" class="btn-artemis btn-primary-artemis"><i class="fa-solid fa-house"></i>Back to top</a>
+            <a asp-controller="Admin" asp-action="Dashboard" class="btn-artemis btn-primary-artemis"><i class="fa-solid fa-house"></i>Back to top</a>
         }
         else if (User.IsInRole("Cashier"))
         {

@@ -33,6 +33,11 @@ namespace ArtemisBank.Controllers
         {
             if (!ModelState.IsValid)
             {
+                var errors = ModelState.Values.SelectMany(v => v.Errors);
+                foreach (var error in errors)
+                {
+                    Console.WriteLine($"Validation Error: {error.ErrorMessage}");
+                }
                 return View(vm);
             }
 
@@ -54,6 +59,7 @@ namespace ArtemisBank.Controllers
                 return View(vm);
             }
             TempData["Success"] = "User created. Activation email sent.";
+            ModelState.Clear();
             return RedirectToAction("Index");
         }
 

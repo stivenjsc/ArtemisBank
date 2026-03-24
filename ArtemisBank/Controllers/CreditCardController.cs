@@ -8,8 +8,7 @@ using System.Security.Claims;
 
 namespace ArtemisBank.Controllers
 {
-    [Authorize(Roles = nameof(UserRole.Admin))]
-    [Authorize(Roles = nameof(UserRole.Client))]
+    [Authorize(Roles = $"{nameof(UserRole.Admin)},{nameof(UserRole.Client)}")]
     public class CreditCardController(
         ICreditCardService creditCardService,
         ISavingsAccountService savingsAccountService,
@@ -78,7 +77,6 @@ namespace ArtemisBank.Controllers
                     ClientId = vm.ClientId,
                     CreditLimit = vm.CreditLimit
                 });
-
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
