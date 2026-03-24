@@ -28,9 +28,25 @@ namespace ArtemisBank.Infrastructure.Identity.Services
                 return Fail("The username or password are incorrect.");
             }
 
+            if (!user.EmailConfirmed)
+            {
+                var passwordIsValid = await _userManager.CheckPasswordAsync(user, password);
+
+                if (!passwordIsValid)
+                {
+                    return Fail("The username or password are incorrect.");
+                }
+
+                var confirmationEmailSent = await TryResendConfirmationEmailAsync(user);
+
+                return confirmationEmailSent
+                    ? Fail("Your account has not been confirmed yet. We sent you a new confirmation email.")
+                    : Fail("Your account has not been confirmed yet. We could not send a new confirmation email right now.");
+            }
+
             if (!user.IsActive)
             {
-                return Fail("Your account is inactive. Please activate your account using the link sent to your email.");
+                return Fail("Your account is inactive. Please complete the pending email process or contact an administrator.");
             }
 
             var result = await _signInManager.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: false);
@@ -61,6 +77,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
                 Role = role
             };
         }
+
         public async Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, string role, decimal initialAmount = 0)
         {
             var existingUser = await _userManager.FindByNameAsync(username);
@@ -93,19 +110,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
                 return false;
             }
 
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            user.ActivationToken = token;
-            
-            await _userManager.UpdateAsync(user);
-            var encodedToken = Uri.EscapeDataString(token);
-
-            var activationLink = $"https://localhost:7108/Account/Activate?token={encodedToken}";
-
-            await _emailService.SendAsync(
-                user.Email,
-                "Activa tu cuenta — Artemis Banking",
-                $"Hola {user.FirstName}, haz clic en el siguiente enlace para activar tu cuenta: {activationLink}"
-            );
+            await SendActivationEmailAsync(user);
             return true;
         }
 
@@ -175,6 +180,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var result = await _userManager.ConfirmEmailAsync(user, token);
             return result.Succeeded;
         }
+
         public async Task<bool> GeneratePasswordResetTokenAsync(string username)
         {
             var user = await _userManager.FindByNameAsync(username);
@@ -191,14 +197,15 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             {
                 To = user.Email!,
                 Subject = "Reset your ArtemisBank Password",
-                Body = $"Click here or use this token to reset your password: {token}"
+                Body = $"Click the following link to reset your password: {BuildResetPasswordLink(user.UserName!, token)}"
             });
 
             return true;
         }
+
         public async Task<bool> ResetPasswordAsync(string username, string token, string newPassword)
         {
-            var user = await _userManager.FindByIdAsync(username);
+            var user = await _userManager.FindByNameAsync(username);
             if (user == null) return false;
 
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
@@ -220,6 +227,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             return MapToDto(user, roles.FirstOrDefault());
         }
+
         public async Task<PaginatedResult<UserDto>> GetAllAsync(int page, int pageSize = 20, UserRole? role = null)
         {
             var query = _userManager.Users.Where(u => u.Role != UserRole.Commerce).OrderByDescending(u => u.Id.CompareTo(""));
@@ -283,7 +291,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
         public async Task<bool> ChangeStatusAsync(string adminId, string userId, bool isActive)
         {
             if (adminId == userId) return false;
-            
+
             var admin = await _userManager.FindByIdAsync(adminId);
             if (admin == null) return false;
 
@@ -302,11 +310,13 @@ namespace ArtemisBank.Infrastructure.Identity.Services
         {
             var user = await _userManager.FindByIdAsync(dto.Id);
             if (user == null) return false;
+
             var existingEmail = await _userManager.FindByEmailAsync(dto.Email);
             if (existingEmail != null && existingEmail.Id != dto.Id) return false;
 
             var existingUser = await _userManager.FindByNameAsync(dto.Username);
             if (existingUser != null && existingUser.Id != dto.Id) return false;
+
             user.FirstName = dto.FirstName;
             user.LastName = dto.LastName;
             user.Cedula = dto.Cedula;
@@ -328,6 +338,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
         {
             return await _userManager.Users.CountAsync(u => u.Role == UserRole.Client && !u.IsActive);
         }
+
         public async Task<int> GetActiveClientsCountAsync()
         {
             return await _userManager.Users.CountAsync(u => u.Role == UserRole.Client && u.IsActive);
@@ -350,6 +361,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             return result;
         }
+
         public async Task<IEnumerable<UserDto>> GetActiveClientsAsync(string? cedula = null)
         {
             var query = _userManager.Users.Where(u => u.Role == UserRole.Client && u.IsActive);
@@ -360,10 +372,12 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             return clients.Select(u => MapToDto(u, UserRole.Client.ToString()));
         }
+
         public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
         }
+
         public async Task<string?> GetActivationTokenAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -373,6 +387,57 @@ namespace ArtemisBank.Infrastructure.Identity.Services
         #region private methods
         private static AuthenticationResult Fail(string error) =>
             new() { Success = false, Error = error };
+
+        private async Task SendActivationEmailAsync(ApplicationUser user)
+        {
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            user.ActivationToken = token;
+            await _userManager.UpdateAsync(user);
+
+            await _emailService.SendAsync(
+                user.Email!,
+                "Activa tu cuenta - Artemis Banking",
+                $"Hola {user.FirstName}, haz clic en el siguiente enlace para activar tu cuenta: {BuildActivationLink(token)}");
+        }
+
+        private async Task<bool> TryResendConfirmationEmailAsync(ApplicationUser user)
+        {
+            var previousActivationToken = user.ActivationToken;
+
+            try
+            {
+                await SendActivationEmailAsync(user);
+                return true;
+            }
+            catch
+            {
+                user.ActivationToken = previousActivationToken;
+
+                try
+                {
+                    await _userManager.UpdateAsync(user);
+                }
+                catch
+                {
+                    // Ignore rollback failures so the login flow can return a controlled message.
+                }
+
+                return false;
+            }
+        }
+
+        private static string BuildActivationLink(string token)
+        {
+            var encodedToken = Uri.EscapeDataString(token);
+            return $"https://localhost:7108/Account/Activate?token={encodedToken}";
+        }
+
+        private static string BuildResetPasswordLink(string username, string token)
+        {
+            var encodedUsername = Uri.EscapeDataString(username);
+            var encodedToken = Uri.EscapeDataString(token);
+            return $"https://localhost:7108/Login/ResetPassword?username={encodedUsername}&token={encodedToken}";
+        }
 
         private static UserDto MapToDto(ApplicationUser user, string? roleName) =>
             new()

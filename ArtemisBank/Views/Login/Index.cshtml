@@ -18,6 +18,14 @@
             <div class="login-logo"><i class="fa-solid fa-landmark"></i></div>
             <h1 class="login-title">Artemis Bank</h1>
             <p class="login-subtitle">Enter your credentials to log in</p>
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-artemis alert-artemis-success mb-3"><i class="fa-solid fa-circle-check"></i> @TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert-artemis alert-artemis-danger mb-3"><i class="fa-solid fa-circle-exclamation"></i> @TempData["Error"]</div>
+            }
             @if (Model.HasError)
             {
                 <div class="alert-artemis alert-artemis-danger mb-3"><i class="fa-solid fa-circle-exclamation"></i> @Model.Error</div>
