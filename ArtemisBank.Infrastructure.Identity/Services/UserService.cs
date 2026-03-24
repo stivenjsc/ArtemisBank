@@ -7,7 +7,9 @@ using ArtemisBank.Infrastructure.Identity.Entities;
 using ArtemisBank.Infrastructure.Shared.EmailServices;
 using ArtemisBank.Infrastructure.Shared.EmailServices.IEmailService;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace ArtemisBank.Infrastructure.Identity.Services
 {
@@ -84,17 +86,21 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             };
 
             var result = await _userManager.CreateAsync(user, password);
-
             if (!result.Succeeded) return false;
+
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             user.ActivationToken = token;
+            
             await _userManager.UpdateAsync(user);
-            await _emailService.SendEmailAsync(new EmailRequest
-            {
-                To = email,
-                Subject = "Activate your ArtemisBank Account",
-                Body = $"Welcome! Please activate your account using this token: {token}"
-            });
+            var encodedToken = Uri.EscapeDataString(token);
+
+            var activationLink = $"https://localhost:7108/Account/Activate?token={encodedToken}";
+
+            await _emailService.SendAsync(
+                user.Email,
+                "Activa tu cuenta — Artemis Banking",
+                $"Hola {user.FirstName}, haz clic en el siguiente enlace para activar tu cuenta: {activationLink}"
+            );
             return true;
         }
 
