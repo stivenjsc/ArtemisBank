@@ -1,6 +1,7 @@
 using ArtemisBank.Core.Application.DTOs;
 using ArtemisBank.Core.Application.DTOs.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
+using ArtemisBank.Core.Application.Interfaces.Services;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Domain.Interfaces;
 using ArtemisBank.Infrastructure.Identity.Entities;
@@ -12,12 +13,13 @@ using Microsoft.EntityFrameworkCore;
 namespace ArtemisBank.Infrastructure.Identity.Services
 {
     public class UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ILoanRepository loanRepository,
-        ICorreoServices emailServices) : IUserService
+        ICorreoServices emailServices, ISavingsAccountService savingsAccountService) : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
         private readonly ILoanRepository _loanRepository = loanRepository;
         private readonly ICorreoServices _emailService = emailServices;
+        private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
 
         public async Task<AuthenticationResult> AuthenticateAsync(string username, string password)
         {
@@ -102,6 +104,11 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             var result = await _userManager.CreateAsync(user, password);
             if (!result.Succeeded) return false;
+
+            if (parsedRole == UserRole.Client && initialAmount >= 0)
+            {
+                await _savingsAccountService.CreateAccountAsync(user.Id, initialAmount);
+            }
 
             var roleResult = await _userManager.AddToRoleAsync(user, role);
             if (!roleResult.Succeeded)
