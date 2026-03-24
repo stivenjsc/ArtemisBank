@@ -89,6 +89,41 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             return true;
         }
+
+        public async Task<bool> RegisterCommerceUserAsync(string firstName, string lastName, string cedula, string username, string email, string password, int commerceId)
+        {
+            var existingUser = await _userManager.FindByNameAsync(username);
+            if (existingUser != null) return false;
+
+            var existingEmail = await _userManager.FindByEmailAsync(email);
+            if (existingEmail != null) return false;
+
+            var user = new ApplicationUser
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Cedula = cedula,
+                UserName = username,
+                Email = email,
+                EmailConfirmed = false,
+                IsActive = false,
+                Role = UserRole.Commerce,
+                CommerceId = commerceId
+            };
+
+            var result = await _userManager.CreateAsync(user, password);
+
+            if (!result.Succeeded) return false;
+
+            await _userManager.AddToRoleAsync(user, UserRole.Commerce.ToString());
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            user.ActivationToken = token;
+            await _userManager.UpdateAsync(user);
+
+            return true;
+        }
+
         public async Task<bool> ActivateAccountAsync(string token)
         {
             var user = await _userManager.Users
@@ -165,6 +200,35 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             var totalCount = await query.CountAsync();
             var users = await query.OrderBy(u => u.UserName).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var userDtos = new List<UserDto>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                userDtos.Add(MapToDto(user, roles.FirstOrDefault()));
+            }
+
+            return new PaginatedResult<UserDto>
+            {
+                Items = userDtos,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResult<UserDto>> GetCommerceUsersAsync(int page, int pageSize = 20)
+        {
+            var query = _userManager.Users
+                .Where(u => u.Role == UserRole.Commerce)
+                .OrderByDescending(u => u.Id);
+
+            var totalCount = await query.CountAsync();
+            var users = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             var userDtos = new List<UserDto>();
 

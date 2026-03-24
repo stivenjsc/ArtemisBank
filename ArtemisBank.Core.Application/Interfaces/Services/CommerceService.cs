@@ -24,6 +24,12 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             return _mapper.Map<CommerceDto>(entity);
         }
 
+        public async Task<IEnumerable<CommerceDto>> GetAllAsync()
+        {
+            var entities = await _repo.GetAllAsync();
+            return _mapper.Map<IEnumerable<CommerceDto>>(entities.Where(e => e.IsActive));
+        }
+
         public async Task<PaginatedResult<CommerceDto>> GetAllPagedAsync(int page, int pageSize = 20)
         {
             var entities = await _repo.GetAllPagedAsync(page, pageSize);
@@ -57,6 +63,15 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             entity.Description = dto.Description;
             entity.Logo = dto.Logo;
             entity.IsActive = dto.IsActive;
+            await _repo.UpdateAsync(entity);
+        }
+
+        public async Task ChangeStatusAsync(int id, bool isActive)
+        {
+            var entity = await _repo.GetByIdAsync(id);
+            if (entity == null) return;
+
+            entity.IsActive = isActive;
             await _repo.UpdateAsync(entity);
         }
 

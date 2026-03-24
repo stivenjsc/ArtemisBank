@@ -11,6 +11,7 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
 
         // Registration
         Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, string role,decimal initialAmount = 0);
+        Task<bool> RegisterCommerceUserAsync(string firstName, string lastName, string cedula, string username, string email, string password, int commerceId);
         Task<bool> ConfirmEmailAsync(string userId, string token);
         Task<bool> ActivateAccountAsync(string token);
 
@@ -21,6 +22,7 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         // User management
         Task<UserDto> GetByIdAsync(string userId);
         Task<PaginatedResult<UserDto>> GetAllAsync(int page, int pageSize = 20, UserRole? role = null);
+        Task<PaginatedResult<UserDto>> GetCommerceUsersAsync(int page, int pageSize = 20);
         Task<int> GetInactiveClientsCountAsync();
         Task<int> GetActiveClientsCountAsync();
         Task<IEnumerable<UserDto>> GetActiveClientsWithoutLoanAsync(string? cedula = null);
