@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ArtemisBank.WebAPI.Controllers.v1
 {
     [ApiVersion("1.0")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public class SavingsAccountController : BaseApiController
     {
         private readonly ISavingsAccountService _savingsAccountService;
