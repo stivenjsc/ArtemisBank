@@ -18,9 +18,9 @@
                 <select name="role" class="form-select form-select-sm" style="width:160px" onchange="this.form.submit()">
                     <option value="">All Roles</option>
                     <option value="Admin" selected="@(ViewBag.CurrentRole?.ToString() == "Admin")">Administrator</option>
+                    <option value="Commerce" selected="@(ViewBag.CurrentRole?.ToString() == "Commerce")">Commerce</option>
                     <option value="Cashier" selected="@(ViewBag.CurrentRole?.ToString() == "Cashier")">Cashier</option>
                     <option value="Client" selected="@(ViewBag.CurrentRole?.ToString() == "Client")">Client</option>
-                    <option value="Commerce" selected="@(ViewBag.CurrentRole?.ToString() == "Commerce")">Commerce</option>
                 </select>
             </form>
             <a asp-controller="User" asp-action="Create" class="btn-artemis btn-primary-artemis">
@@ -58,6 +58,10 @@
                             else if (user.Role.ToString() == "Cashier")
                             {
                                 <span class="badge-status badge-pending"><i class="fa-solid fa-cash-register me-1"></i>Cashier</span>
+                            }
+                            else if (user.Role.ToString() == "Commerce")
+                            {
+                                <span class="badge-status badge-pending"><i class="fa-solid fa-store me-1"></i>Commerce</span>
                             }
                             else
                             {

@@ -9,7 +9,7 @@ namespace ArtemisBank.Core.Application.ViewModels.Transaction
         public string SourceAccountNumber { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La cuenta de destino es requerida.")]
-        [StringLength(12, ErrorMessage = "El número de cuenta no es válido.", MinimumLength = 9)]
+        [StringLength(9, ErrorMessage = "El número de cuenta no es válido.", MinimumLength = 9)]
         public string DestinationAccountNumber { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El monto es requerido.")]

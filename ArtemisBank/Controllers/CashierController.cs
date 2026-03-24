@@ -52,8 +52,14 @@ namespace ArtemisBank.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Deposit(CashierDepositViewModel vm)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(vm);
+
+            if (string.IsNullOrEmpty(vm.AccountNumber)) 
+            {
+                vm.HasError = true;
+                vm.Error = "Please enter an account number.";
                 return View(vm);
+            }
 
             var account = await _savingsAccountService.GetByAccountNumberAsync(vm.AccountNumber);
 
@@ -104,8 +110,14 @@ namespace ArtemisBank.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Withdrawal(CashierWithdrawalViewModel vm)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(vm);
+
+            if (string.IsNullOrEmpty(vm.AccountNumber)) 
+            {
+                vm.HasError = true;
+                vm.Error = "Please enter an account number.";
                 return View(vm);
+            }
 
             var account = await _savingsAccountService.GetByAccountNumberAsync(vm.AccountNumber);
 
@@ -163,8 +175,14 @@ namespace ArtemisBank.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PayCreditCard(CashierPayCreditCardViewModel vm)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(vm);
+
+            if (string.IsNullOrEmpty(vm.CardNumber))
+            {
+                vm.HasError = true;
+                vm.Error = "Please enter an account number.";
                 return View(vm);
+            }
 
             var account = await _savingsAccountService.GetByAccountNumberAsync(vm.SourceAccountNumber);
             if (account == null || !account.IsActive)
@@ -230,8 +248,14 @@ namespace ArtemisBank.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PayLoan(CashierPayLoanViewModel vm)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(vm);
+
+            if (string.IsNullOrEmpty(vm.LoanNumber))
+            {
+                vm.HasError = true;
+                vm.Error = "Please enter an account number.";
                 return View(vm);
+            }
 
             var account = await _savingsAccountService.GetByAccountNumberAsync(vm.SourceAccountNumber);
             if (account == null || !account.IsActive)
@@ -297,8 +321,14 @@ namespace ArtemisBank.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ThirdPartyTransfer(CashierThirdPartyTransferViewModel vm)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(vm);
+
+            if (string.IsNullOrEmpty(vm.SourceAccountNumber) || string.IsNullOrEmpty(vm.DestinationAccountNumber))
+            {
+                vm.HasError = true;
+                vm.Error = "Please enter an account number.";
                 return View(vm);
+            }
 
             var sourceAccount = await _savingsAccountService
                 .GetByAccountNumberAsync(vm.SourceAccountNumber);
