@@ -20,6 +20,7 @@ namespace ArtemisBank.Core.Application.IoC
             services.AddTransient<ICreditCardConsumptionService, CreditCardConsumptionService>();
             services.AddTransient<ILoanInstallmentService, LoanInstallmentService>();
             services.AddTransient<IDashboardService, DashboardService>();
+            services.AddTransient<IPaymentProcessorService, PaymentProcessorService>();
 
             return services;
         }
