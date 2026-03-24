@@ -1,4 +1,6 @@
-﻿namespace ArtemisBank.Core.Application.DTOs.Account
+﻿// A
+
+namespace ArtemisBank.Core.Application.DTOs.Account
 {
     public class AssignSavingsAccountDto
     {
