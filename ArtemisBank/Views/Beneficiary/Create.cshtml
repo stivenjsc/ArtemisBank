@@ -1,0 +1,71 @@
+﻿ @model SaveBeneficiaryViewModel
+@{
+    ViewData["Title"] = "Add Beneficiary";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Client" asp-action="Index">My Banking</a> /
+    <a asp-controller="Beneficiary" asp-action="Index">Beneficiaries</a> / Add New
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h5>
+                    <i class="fa-solid fa-user-plus me-2" style="color:var(--emerald-600)"></i>
+                    Add New Beneficiary
+                </h5>
+            </div>
+
+            <div class="p-4">
+                <form asp-controller="Beneficiary" asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div asp-validation-summary="All" class="alert alert-danger mb-3" style="font-size: 0.9rem;"></div>
+                    }
+
+                    <div class="mb-3">
+                        <label asp-for="AccountNumber" class="form-label fw-bold">Account Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-hashtag"></i></span>
+                            <input asp-for="AccountNumber" class="form-control" placeholder="Enter account number (e.g. 10002345)" />
+                        </div>
+                        <span asp-validation-for="AccountNumber" class="text-danger" style="font-size: 0.85rem;"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Alias" class="form-label fw-bold">Alias / Nickname</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-tag"></i></span>
+                            <input asp-for="Alias" class="form-control" placeholder="Example: Mom's Account" />
+                        </div>
+                        <span asp-validation-for="Alias" class="text-danger" style="font-size: 0.85rem;"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-action="Index" class="btn-artemis btn-ghost-artemis">
+                            <i class="fa-solid fa-xmark me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn-artemis btn-primary-artemis">
+                            <i class="fa-solid fa-floppy-disk me-1"></i> Save Beneficiary
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
+            <i class="fa-solid fa-circle-info me-2"></i>
+            The account number must belong to an active ArtemisBank client.
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
