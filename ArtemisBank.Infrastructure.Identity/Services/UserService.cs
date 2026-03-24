@@ -1,7 +1,6 @@
 using ArtemisBank.Core.Application.DTOs;
 using ArtemisBank.Core.Application.DTOs.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
-using ArtemisBank.Core.Application.Interfaces.Services;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Domain.Interfaces;
 using ArtemisBank.Infrastructure.Identity.Entities;
