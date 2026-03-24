@@ -7,9 +7,7 @@ using ArtemisBank.Infrastructure.Identity.Entities;
 using ArtemisBank.Infrastructure.Shared.EmailServices;
 using ArtemisBank.Infrastructure.Shared.EmailServices.IEmailService;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
 
 namespace ArtemisBank.Infrastructure.Identity.Services
 {
@@ -87,6 +85,13 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             var result = await _userManager.CreateAsync(user, password);
             if (!result.Succeeded) return false;
+
+            var roleResult = await _userManager.AddToRoleAsync(user, role);
+            if (!roleResult.Succeeded)
+            {
+                await _userManager.DeleteAsync(user);
+                return false;
+            }
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             user.ActivationToken = token;
