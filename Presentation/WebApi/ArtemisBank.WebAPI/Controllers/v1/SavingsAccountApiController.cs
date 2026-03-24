@@ -1,6 +1,7 @@
 using ArtemisBank.Core.Application.DTOs.Account;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Enums;
+using ArtemisBank.WebAPI.DTOs.SavingsAccount;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,14 +10,9 @@ namespace ArtemisBank.WebAPI.Controllers.v1
 {
     [ApiVersion("1.0")]
     [Authorize(Roles = nameof(UserRole.Admin))]
-    public class SavingsAccountController : BaseApiController
+    public class SavingsAccountApiController(ISavingsAccountService savingsAccountService) : BaseApiController
     {
-        private readonly ISavingsAccountService _savingsAccountService;
-
-        public SavingsAccountController(ISavingsAccountService savingsAccountService)
-        {
-            _savingsAccountService = savingsAccountService;
-        }
+        private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
 
         /// <summary>
         /// Get paginated list of savings accounts
@@ -25,19 +21,21 @@ namespace ArtemisBank.WebAPI.Controllers.v1
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
-            [FromQuery] AccountStatus? status = null,
-            [FromQuery] AccountType? type = null,
-            [FromQuery] string? cedula = null)
+        public async Task<IActionResult> GetAll( [FromQuery] int page = 1,  [FromQuery] int pageSize = 20, [FromQuery] AccountStatus? status = null,
+            [FromQuery] AccountType? type = null, [FromQuery] string? cedula = null)
         {
+
+            if (!string.IsNullOrEmpty(status.ToString()) && Enum.TryParse<AccountStatus>(status.ToString(), out var parsedStatus))
+                status = parsedStatus;
+
+            if (!string.IsNullOrEmpty(type.ToString()) && Enum.TryParse<AccountType>(type.ToString(), out var parsedType))
+                type = parsedType;
+            
             if (page < 1 || pageSize < 1 || pageSize > 100)
             {
                 return BadRequest(new { message = "Invalid pagination parameters." });
             }
-
-            var result = await _savingsAccountService.GetAllPagedAsync(page, pageSize, status, type, cedula);
+            var result = await _savingsAccountService.GetAllPagedAsync(page, 20, status, type, cedula);
             return Ok(result);
         }
 
@@ -59,6 +57,30 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             return Ok(account);
         }
 
+
+        /// <summary>
+        /// Assign a secondary savings account to a client
+        /// </summary>
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> Assign([FromBody] AssignSavingsAccountApiDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            await _savingsAccountService.AssignSecondaryAsync(new AssignSavingsAccountDto
+            {
+                ClientId = dto.CedulaClient,
+                InitialBalance = dto.InitialBalance
+            });
+
+            return StatusCode(201, new { message = "Account assigned correctly." });
+        }
+
         /// <summary>
         /// Get transactions for a specific account
         /// </summary>
@@ -77,26 +99,6 @@ namespace ArtemisBank.WebAPI.Controllers.v1
 
             var transactions = await _savingsAccountService.GetTransactionsAsync(accountNumber);
             return Ok(transactions);
-        }
-
-        /// <summary>
-        /// Assign a secondary savings account to a client
-        /// </summary>
-        [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> AssignSecondary([FromBody] AssignSavingsAccountDto dto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            await _savingsAccountService.AssignSecondaryAsync(dto);
-            return Created();
         }
 
         /// <summary>
