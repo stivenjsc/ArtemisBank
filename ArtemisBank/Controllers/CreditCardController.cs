@@ -1,7 +1,9 @@
 using ArtemisBank.Core.Application.DTOs.CreditCard;
 using ArtemisBank.Core.Application.Interfaces.IServices;
+using ArtemisBank.Core.Application.Interfaces.Services;
 using ArtemisBank.Core.Application.ViewModels.CreditCard;
 using ArtemisBank.Core.Domain.Enums;
+using ArtemisBank.Infrastructure.Identity.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -9,14 +11,14 @@ using System.Security.Claims;
 namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = $"{nameof(UserRole.Admin)},{nameof(UserRole.Client)}")]
-    public class CreditCardController(
-        ICreditCardService creditCardService,
-        ISavingsAccountService savingsAccountService,
-        ICreditCardConsumptionService consumptionService) : Controller
+    public class CreditCardController( ICreditCardService creditCardService, ISavingsAccountService savingsAccountService,
+        ICreditCardConsumptionService consumptionService, ILoanService loan, IUserService user) : Controller
     {
         private readonly ICreditCardService _creditCardService = creditCardService;
         private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
         private readonly ICreditCardConsumptionService _consumptionService = consumptionService;
+        private readonly ILoanService _loanService = loan;
+        private readonly IUserService _userService = user;
 
         #region Admin - List
 
@@ -55,9 +57,19 @@ namespace ArtemisBank.Controllers
         #region Admin - Assign Credit Card
 
         [Authorize(Roles = nameof(UserRole.Admin))]
-        public IActionResult Assign()
+        public async Task<IActionResult> Assign()
         {
-            return View(new AssignCreditCardViewModel());
+            var averageDebt = await _loanService.GetAverageDebtAsync();
+            var clients = await _userService.GetActiveClientsAsync(null);
+
+            var vm = new AssignCreditCardViewModel
+            {
+                AverageDebt = averageDebt,
+                Clients = clients,
+                CreditLimit = 0
+            };
+
+            return View(vm);
         }
 
         [Authorize(Roles = nameof(UserRole.Admin))]
