@@ -15,5 +15,6 @@ namespace ArtemisBank.Core.Application.DTOs.Loan
         public LoanStatus Status { get; set; }
         public bool IsOnTime { get; set; }
         public string ClientFullName { get; set; } = string.Empty;
+        public string ClientId { get; set; } = string.Empty;
     }
 }

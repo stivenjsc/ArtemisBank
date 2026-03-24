@@ -1,0 +1,87 @@
+﻿@model AccountDetailViewModel
+@{
+    ViewData["Title"] = "Account Details";
+}
+
+<div class="breadcrumb-artemis mb-3">
+    <a asp-controller="Client" asp-action="Index">My Banking</a> / Account Details
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-label">Account No.</div>
+            <div class="stat-value" style="font-size:1.1rem;letter-spacing:2px">@Model.Account.AccountNumber</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-label">Current Balance</div>
+            <div class="stat-value money" style="color:var(--emerald-700)">@Model.Account.Balance.ToString("N2")</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-label">Type</div>
+            <div class="stat-value" style="font-size:1rem">@Model.Account.Type</div>
+        </div>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="table-card-header">
+        <h5>
+            <i class="fa-solid fa-list me-2" style="color:var(--emerald-600)"></i>
+            Transaction History
+        </h5>
+        <a asp-controller="Client" asp-action="Index" class="btn-artemis btn-ghost-artemis">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="artemis-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Beneficiary</th>
+                    <th>Origin</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.Transactions)
+                {
+                    <tr>
+                        <td>@t.TransactionDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="money-value">RD$ @t.Amount.ToString("N2")</span></td>
+                        <td>
+                            @if (t.Type.ToString() == "Debit")
+                            {
+                                <span class="badge-status badge-danger">DEBIT</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-active">CREDIT</span>
+                            }
+                        </td>
+                        <td style="font-size:.82rem">@t.Beneficiary</td>
+                        <td style="font-size:.82rem">@t.Origin</td>
+                        <td>
+                            @if (t.Status.ToString() == "Approved")
+                            {
+                                <span class="badge-status badge-active">APPROVED</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-inactive">REJECTED</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

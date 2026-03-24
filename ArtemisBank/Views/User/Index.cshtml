@@ -20,6 +20,7 @@
                     <option value="Admin" selected="@(ViewBag.CurrentRole?.ToString() == "Admin")">Administrator</option>
                     <option value="Cashier" selected="@(ViewBag.CurrentRole?.ToString() == "Cashier")">Cashier</option>
                     <option value="Client" selected="@(ViewBag.CurrentRole?.ToString() == "Client")">Client</option>
+                    <option value="Commerce" selected="@(ViewBag.CurrentRole?.ToString() == "Commerce")">Commerce</option>
                 </select>
             </form>
             <a asp-controller="User" asp-action="Create" class="btn-artemis btn-primary-artemis">

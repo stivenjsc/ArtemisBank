@@ -23,7 +23,7 @@
                     <div class="meta-row"><span class="meta-label">Type</span><span class="meta-value">@account.Type</span></div>
                     <div class="meta-row"><span class="meta-label">Status</span><span class="meta-value green">Active</span></div>
                     <div class="mt-3">
-                        <a asp-controller="CreditCard" asp-action="AccountDetail" asp-route-accountNumber="@account.AccountNumber"
+                        <a asp-controller="Client" asp-action="AccountDetail" asp-route-accountNumber="@account.AccountNumber"
                            class="btn-artemis btn-outline-artemis w-100 justify-content-center">
                             <i class="fa-solid fa-eye"></i> View Transactions
                         </a>
@@ -60,7 +60,7 @@
                             </span>
                         </div>
                         <div class="mt-3">
-                            <a asp-controller="CreditCard" asp-action="LoanDetail" asp-route-loanId="@loan.Id"
+                            <a asp-controller="Client" asp-action="LoanDetail" asp-route-loanId="@loan.Id"
                                class="btn-artemis btn-outline-artemis w-100 justify-content-center">
                                 <i class="fa-solid fa-eye"></i> View Amortization
                             </a>
@@ -101,7 +101,7 @@
                                 <div style="height:4px; border-radius:2px; width:@pct%; background:@(pct > 80 ? "var(--danger)" : pct > 50 ? "var(--warning)" : "var(--emerald-500)")"></div>
                             </div>
                         </div>
-                        <a asp-controller="CreditCard" asp-action="CardDetail" asp-route-cardId="@card.Id"
+                        <a asp-controller="Client" asp-action="CardDetail" asp-route-cardId="@card.Id"
                            class="btn-artemis btn-outline-artemis w-100 justify-content-center">
                             <i class="fa-solid fa-eye"></i> View Spending
                         </a>
