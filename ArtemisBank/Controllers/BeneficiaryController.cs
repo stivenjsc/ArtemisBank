@@ -64,12 +64,12 @@ namespace ArtemisBank.Controllers
             var clientId = GetClientId();
             var beneficiary = await _beneficiaryService.GetByIdAsync(id);
 
-            if (beneficiary.OwnerId != clientId)
+            if (beneficiary == null || beneficiary.OwnerId != clientId)
             {
                 return Forbid();
             }
-
             await _beneficiaryService.DeleteAsync(id);
+            TempData["Success"] = "Beneficiary removed successfully.";
             return RedirectToAction("Index");
         }
     }
