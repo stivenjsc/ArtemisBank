@@ -16,7 +16,13 @@ namespace ArtemisBank.WebAPI.Controllers.v1
         private readonly ILoanService _loanService = loanService;
         private readonly ILoanInstallmentService _installmentService = installmentService;
 
+        /// <summary>
+        /// Obtiene un listado paginado de todos los préstamos con filtros opcionales.
+        /// </summary>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAll( [FromQuery] int pages = 1, [FromQuery] string? status = null, [FromQuery] string? cedula = null)
         {
             LoanStatus? loanStatus = null;
@@ -27,7 +33,18 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             return Ok(result);
         }
 
+        /// <summary>
+        /// Asigna un nuevo préstamo a un cliente, calculando el riesgo y generando la tabla de amortización.
+        /// </summary>
+        /// <remarks>
+        /// Realiza validaciones de deuda máxima permitida basándose en el promedio general del banco.
+        /// </remarks>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Assign([FromBody] AssignLoanApiDto dto)
         {
             if (!ModelState.IsValid)
@@ -59,7 +76,14 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             return StatusCode(201, new { message = "Loan created and amortization table generated." });
         }
 
+        /// <summary>
+        /// Obtiene el detalle de un préstamo específico y su tabla de amortización (cuotas).
+        /// </summary>
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetDetail(int id)
         {
             var loan = await _loanService.GetByIdAsync(id);
@@ -82,7 +106,16 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             });
         }
 
+        /// <summary>
+        /// Actualiza la tasa de interés de un préstamo existente.
+        /// </summary>
+        /// <param name="request">Nueva tasa de interés (debe ser mayor a 0).</param>
         [HttpPatch("{id}/rate")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UpdateRate(int id, [FromBody] UpdateRateRequest request)
         {
             if (request.NewRates <= 0)
