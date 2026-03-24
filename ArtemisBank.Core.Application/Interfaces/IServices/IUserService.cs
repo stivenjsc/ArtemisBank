@@ -10,7 +10,8 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         Task<AuthenticationResult> AuthenticateAsync(string username, string password);
 
         // Registration
-        Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, string role,decimal initialAmount = 0);
+        Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, 
+            string email, string password, string role, string adminId, decimal initialAmount = 0);
         Task<bool> RegisterCommerceUserAsync(string firstName, string lastName, string cedula, string username, string email, string password, int commerceId);
         Task<bool> ConfirmEmailAsync(string userId, string token);
         Task<bool> ActivateAccountAsync(string token);

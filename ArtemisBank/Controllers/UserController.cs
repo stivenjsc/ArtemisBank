@@ -40,7 +40,7 @@ namespace ArtemisBank.Controllers
                 }
                 return View(vm);
             }
-
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var registered = await _userService.RegisterAsync(
                 vm.FirstName,
                 vm.LastName,
@@ -49,6 +49,7 @@ namespace ArtemisBank.Controllers
                 vm.Email,
                 vm.Password,
                 vm.Role.ToString(),
+                adminId!,
                 vm.Role == UserRole.Client ? vm.InitialAmount ?? 0 : 0
             );
 

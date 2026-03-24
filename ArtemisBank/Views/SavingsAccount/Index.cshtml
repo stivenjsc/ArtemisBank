@@ -60,7 +60,7 @@
                             </span>
                         </td>
                         <td>
-                            @if (acc.Type.ToString("N2") == "Primary")
+                            @if (acc.Type.ToString() == "Primary")
                             {
                                 <span class="badge-status badge-active">Primary</span>
                             }
@@ -70,7 +70,7 @@
                             }
                         </td>
                         <td>
-                            @if (acc.Status.ToString("N2") == "Active")
+                            @if (acc.Status.ToString() == "Active")
                             {
                                 <span class="badge-status badge-active">Active</span>
                             }
@@ -85,7 +85,7 @@
                                    class="btn-artemis btn-outline-artemis" style="padding:5px 10px; font-size:.78rem">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
-                                @if (acc.Type.ToString("N2") == "Secondary" && acc.Status.ToString("N2") == "Active")
+                                @if (acc.Type.ToString() == "Secondary" && acc.Status.ToString() == "Active")
                                 {
                                     <a asp-controller="SavingsAccount" asp-action="Cancel" asp-route-accountNumber="@acc.AccountNumber"
                                        class="btn-artemis btn-danger-artemis" style="padding:5px 10px; font-size:.78rem">

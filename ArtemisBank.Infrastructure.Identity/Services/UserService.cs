@@ -79,7 +79,8 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             };
         }
 
-        public async Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, string role, decimal initialAmount = 0)
+        public async Task<bool> RegisterAsync(string firstName, string lastName, string cedula, string username, string email, string password, 
+            string role, string adminId, decimal initialAmount = 0)
         {
             var existingUser = await _userManager.FindByNameAsync(username);
             if (existingUser != null) return false;
@@ -106,7 +107,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             if (parsedRole == UserRole.Client && initialAmount >= 0)
             {
-                await _savingsAccountService.CreateAccountAsync(user.Id, initialAmount);
+                await _savingsAccountService.CreateAccountAsync(user.Id,adminId, initialAmount);
             }
 
             var roleResult = await _userManager.AddToRoleAsync(user, role);

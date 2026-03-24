@@ -99,8 +99,8 @@ namespace ArtemisBank.WebAPI.Controllers.v1
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var AdminId = User.FindFirst("uid")?.Value;
 
             var result = await _userService.RegisterAsync(
                 request.FirstName,
@@ -110,7 +110,9 @@ namespace ArtemisBank.WebAPI.Controllers.v1
                 request.Email,
                 request.Password,
                 request.Role,
-                request.InitialAmount);
+                AdminId!,
+                request.InitialAmount
+                );
 
             if (!result)
                 return Conflict(new { message = "Username or email already exists." });

@@ -14,7 +14,7 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         Task<SavingsAccountDto?> GetPrimaryAccountByClientIdAsync(string clientId);
         Task<PaginatedResult<SavingsAccountDto>> GetAllPagedAsync(int page, int pageSize = 20, AccountStatus? status = null, AccountType? type = null, string? cedula = null);
 
-        Task<SavingsAccountDto> CreateAccountAsync(string clientId, decimal initialAmount, AccountType type = AccountType.Primary);
+        Task<SavingsAccountDto> CreateAccountAsync(string clientId, string adminId, decimal initialAmount, AccountType type = AccountType.Primary);
         Task UpdateAsync(SavingsAccountDto dto);
         Task<bool> ChangeStatusAsync(int accountId, AccountStatus status);
 

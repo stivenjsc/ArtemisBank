@@ -55,7 +55,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             };
         }
 
-        public async Task<SavingsAccountDto> CreateAccountAsync(string clientId, decimal initialAmount, AccountType type = AccountType.Primary)
+        public async Task<SavingsAccountDto> CreateAccountAsync(string clientId, string adminId, decimal initialAmount, AccountType type = AccountType.Primary)
         {
             string accountNumber;
             do
@@ -71,7 +71,8 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 Type = type,
                 Status = AccountStatus.Active,
                 CreatedAt = DateTime.UtcNow,
-                UserId = clientId
+                UserId = clientId,
+                CreatedByAdminId = adminId
             };
 
             await _repo.AddAsync(account);
