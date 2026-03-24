@@ -9,6 +9,7 @@ using System.Security.Claims;
 namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = nameof(UserRole.Admin))]
+    [Authorize(Roles = nameof(UserRole.Client))]
     public class CreditCardController(
         ICreditCardService creditCardService,
         ISavingsAccountService savingsAccountService,
