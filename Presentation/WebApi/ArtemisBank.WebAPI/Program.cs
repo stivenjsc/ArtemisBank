@@ -4,7 +4,7 @@ using ArtemisBank.Infrastructure.Identity;
 using ArtemisBank.Infrastructure.Identity.Seeds;
 using ArtemisBank.Infrastructure.Persistence.IoC;
 using ArtemisBank.Infrastructure.Shared.IoC;
-using ArtemisBank.WebAPI.Helpers;
+using ArtemisBank.WebAPI.Extentions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,13 +19,12 @@ builder.Services.AddApplicationLayer();
 builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperProfile));
 
 builder.Services.AddJwtAuthenticationLayer(builder.Configuration);
+
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddOpenApi(options =>
-{
-    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
-});
+builder.Services.AddSwaggerExtensions();
+builder.Services.AddAppiVersioningExtensions();
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
@@ -36,8 +35,7 @@ await app.SeedIdentityDataAsync();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UserSwaggerExtensions(app);
     app.MapOpenApi();
 }
 

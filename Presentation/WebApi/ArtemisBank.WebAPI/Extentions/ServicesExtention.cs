@@ -1,0 +1,49 @@
+﻿using Asp.Versioning;
+using Microsoft.OpenApi;
+
+namespace ArtemisBank.WebAPI.Extentions
+{
+    public static class ServicesExtention
+    {
+        public static void AddSwaggerExtensions(this IServiceCollection services)
+        {
+            services.AddSwaggerGen(options =>
+            {
+                List<string> xmlFiles = Directory.GetFiles(AppContext.BaseDirectory, "*.xml", SearchOption.TopDirectoryOnly).ToList();
+                xmlFiles.ForEach(xmlFile =>options.IncludeXmlComments(xmlFile));
+
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "Artemis Bank API",
+                    Description = "An ASP.NET Core Web API for Artemis Bank",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Ana Z, Santana y Juan E. Celedonio",
+                        Email = "20242153@itla.edu.do and 20241562@itla.edu.do",
+                        Url = new Uri("https://www.itla.edu.do")
+                    }
+                });
+                options.DescribeAllParametersInCamelCase();
+            });
+        }
+
+        public static void AddAppiVersioningExtensions(this IServiceCollection services)
+        {
+            services.AddApiVersioning(opt =>
+            {
+                opt.DefaultApiVersion = new ApiVersion(1, 0);
+                opt.AssumeDefaultVersionWhenUnspecified = true;
+                opt.ReportApiVersions = true;
+                opt.ApiVersionReader = ApiVersionReader.Combine(
+                    new UrlSegmentApiVersionReader(),
+                    new HeaderApiVersionReader("X-Api-Version")
+                    );
+            }).AddApiExplorer(opt =>
+            {
+                opt.GroupNameFormat = "'v'VVV";
+                opt.SubstituteApiVersionInUrl = true;
+            });
+        }
+    }
+}
