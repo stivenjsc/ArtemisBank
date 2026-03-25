@@ -14,6 +14,6 @@ namespace ArtemisBank.Core.Domain.Entities
         public int InstallmentNumber { get; set; }
         // Foreign key to Loan
         public int LoanId { get; set; }
-        public Loan Loan { get; set; } = new Loan();
+        public Loan Loan { get; set; } = null!;
     }
 }

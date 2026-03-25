@@ -113,27 +113,50 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
         public async Task<TransactionDto> PayCreditCardAsync(PaymentDto dto)
         {
+            if (dto.Amount <= 0)
+                throw new InvalidOperationException("The amount must be greater than zero.");
+
             var source = await _accountRepo.GetByAccountNumberAsync(dto.SourceAccountNumber)
                 ?? throw new InvalidOperationException("Source account not found.");
+
+            var card = await _creditCardRepo.GetByCardNumberAsync(dto.DestinationAccountNumber)
+                ?? throw new InvalidOperationException("Credit card not found.");
 
             if (source.Status != AccountStatus.Active)
                 throw new InvalidOperationException("Source account is not active.");
 
-            if (source.Balance < dto.Amount)
+            if (card.Status != CardStatus.Active)
+                throw new InvalidOperationException("Credit card is not active.");
+
+            if (card.AmountOwed <= 0)
+                throw new InvalidOperationException("This card has no outstanding debt.");
+
+            var actualPayment = Math.Min(dto.Amount, card.AmountOwed);
+
+            if (source.Balance < actualPayment)
                 throw new InvalidOperationException("Insufficient funds.");
 
-            source.Balance -= dto.Amount;
+            source.Balance -= actualPayment;
+            card.AmountOwed -= actualPayment;
+
             await _accountRepo.UpdateAsync(source);
+            await _creditCardRepo.UpdateAsync(card);
+
+            var destinationReference = $"CARD-{card.CardNumber[^4..]}";
 
             var transaction = new Transaction
             {
-                Amount = dto.Amount,
+                Amount = actualPayment,
                 TransactionDate = DateTime.UtcNow,
                 Type = TransactionType.Credit,
                 Origin = dto.SourceAccountNumber,
                 Beneficiary = dto.DestinationAccountNumber,
+                SourceAccountNumber = dto.SourceAccountNumber,
+                DestinationAccountNumber = destinationReference,
+                Description = "Credit card payment",
                 Status = TransactionStatus.Approved,
-                SavingAccountId = source.Id
+                SavingAccountId = source.Id,
+                CreatedAt = DateTime.UtcNow
             };
 
             await _repo.AddAsync(transaction);
@@ -293,6 +316,8 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             await _accountRepo.UpdateAsync(account);
             await _creditCardRepo.UpdateAsync(card);
 
+            var destinationReference = $"CARD-{card.CardNumber[^4..]}";
+
             var transaction = new Transaction
             {
                 Amount = actualPayment,
@@ -303,7 +328,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 TransactionDate = DateTime.UtcNow,
                 SavingAccountId = account.Id,
                 SourceAccountNumber = dto.SourceAccountNumber,
-                DestinationAccountNumber = dto.CardNumber,
+                DestinationAccountNumber = destinationReference,
                 Description = "Credit card payment made at branch",
                 CreatedAt = DateTime.UtcNow
             };
