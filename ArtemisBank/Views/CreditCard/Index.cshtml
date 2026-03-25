@@ -60,7 +60,7 @@
                             </span>
                         </td>
                         <td>
-                            @if (card.Status.ToString("N2") == "Active")
+                            @if (card.Status.ToString() == "Active")
                             {
                                 <span class="badge-status badge-active">Active</span>
                             }
@@ -75,7 +75,7 @@
                                    class="btn-artemis btn-outline-artemis" style="padding:5px 10px; font-size:.78rem">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
-                                @if (card.Status.ToString("N2") == "Active")
+                                @if (card.Status.ToString() == "Active")
                                 {
                                     <a asp-controller="CreditCard" asp-action="EditLimit" asp-route-id="@card.Id"
                                        class="btn-artemis btn-gold-artemis" style="padding:5px 10px; font-size:.78rem">

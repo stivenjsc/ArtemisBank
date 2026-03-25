@@ -39,7 +39,7 @@
                         </td>
                         <td>@c.CommerceName</td>
                         <td>
-                            @if (c.Status.ToString("N2") == "Approved")
+                            @if (c.Status.ToString() == "Approved")
                             {
                                 <span class="badge-status badge-active">Approved</span>
                             }

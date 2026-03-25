@@ -79,6 +79,8 @@ namespace ArtemisBank.Controllers
         {
             if (!ModelState.IsValid)
             {
+                vm.AverageDebt = await _loanService.GetAverageDebtAsync();
+                vm.Clients = await _userService.GetActiveClientsAsync(null);
                 return View(vm);
             }
 
@@ -95,6 +97,8 @@ namespace ArtemisBank.Controllers
             {
                 vm.HasError = true;
                 vm.Error = ex.Message;
+                vm.AverageDebt = await _loanService.GetAverageDebtAsync();
+                vm.Clients = await _userService.GetActiveClientsAsync(null);
                 return View(vm);
             }
         }

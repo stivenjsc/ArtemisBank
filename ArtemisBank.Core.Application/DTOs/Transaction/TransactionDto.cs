@@ -12,5 +12,6 @@ namespace ArtemisBank.Core.Application.DTOs.Transaction
         public string Origin { get; set; } = string.Empty;
         public TransactionStatus Status { get; set; }
         public int SavingAccountId { get; set; }
+        public string Description { get; set; } = string.Empty; 
     }
 }

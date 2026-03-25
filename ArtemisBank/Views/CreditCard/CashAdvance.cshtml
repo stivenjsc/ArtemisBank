@@ -37,7 +37,7 @@
                         @foreach (var card in Model.UserCreditCards)
                         {
                             <option value="@card.Id">
-                                **** @card.CardNumber.Substring(12) — Available: RD$ @((card.CreditLimit - card.AmountOwed).ToString("N2"))
+                                **** @card.CardNumber.Substring(9) — Available: RD$ @((card.CreditLimit - card.AmountOwed).ToString("N2"))
                             </option>
                         }
                     </select>
