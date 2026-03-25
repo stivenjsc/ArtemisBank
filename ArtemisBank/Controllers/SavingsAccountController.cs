@@ -4,6 +4,7 @@ using ArtemisBank.Core.Application.ViewModels.Account;
 using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ArtemisBank.Controllers
 {
@@ -112,9 +113,12 @@ namespace ArtemisBank.Controllers
 
             try
             {
+                var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
                 await _savingsAccountService.AssignSecondaryAsync(new AssignSavingsAccountDto
                 {
                     ClientId = vm.ClientId,
+                    AdminId = adminId ?? string.Empty,
                     InitialBalance = vm.InitialBalance
                 });
 

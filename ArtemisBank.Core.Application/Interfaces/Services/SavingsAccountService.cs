@@ -215,6 +215,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 AccountNumber = accountNumber,
                 Balance = dto.InitialBalance,
                 UserId = dto.ClientId,
+                CreatedByAdminId = dto.AdminId,
                 Type = AccountType.Secondary,
                 Status = AccountStatus.Active,
                 CreatedAt = DateTime.UtcNow
@@ -227,8 +228,13 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 {
                     Amount = dto.InitialBalance,
                     Type = TransactionType.Credit,
-                    DestinationAccountNumber = accountNumber,
+                    TransactionDate = DateTime.UtcNow,
+                    Origin = "SYSTEM",
+                    Beneficiary = accountNumber,
+                    Status = TransactionStatus.Approved,
+                    SavingAccountId = account.Id,
                     SourceAccountNumber = "SYSTEM",
+                    DestinationAccountNumber = accountNumber,
                     Description = "Initial deposit for secondary account opening",
                     CreatedAt = DateTime.UtcNow
                 };
