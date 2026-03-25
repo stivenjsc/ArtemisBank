@@ -61,7 +61,7 @@
             <tbody>
                 @foreach (var inst in Model.Installments)
                 {
-                    <tr class="@(inst.Status.ToString("N2") == "Paid" ? "amort-row-paid" : "") @(inst.IsOverdue ? "amort-row-overdue" : "")">
+                    <tr class="@(inst.Status.ToString() == "Paid" ? "amort-row-paid" : "") @(inst.IsOverdue ? "amort-row-overdue" : "")">
                         <td>@inst.InstallmentNumber</td>
                         <td>@inst.DueDate.ToString("MM/dd/yyyy")</td>
                         <td>
@@ -80,7 +80,7 @@
                             }
                         </td>
                         <td>
-                            @if (inst.Status.ToString("N2") == "Paid")
+                            @if (inst.Status.ToString() == "Paid")
                             {
                                 <span class="badge-status badge-paid">Paid</span>
                             }

@@ -1,9 +1,10 @@
 using ArtemisBank.Core.Application.DTOs.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
-using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Application.ViewModels.User;
+using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MySqlX.XDevAPI.Common;
 using System.Security.Claims;
 
 namespace ArtemisBank.Controllers
@@ -141,9 +142,16 @@ namespace ArtemisBank.Controllers
                 return RedirectToAction("Index");
             }
 
-            await _userService.ChangeStatusAsync(adminId, userId, activate);
+            var result = await _userService.ChangeStatusAsync(adminId, userId, activate);
 
-            TempData["Success"] = activate ? "User successfully activated." : "User successfully deactivated.";
+            if (result)
+            {
+                TempData["Success"] = activate ? "User successfully activated." : "User successfully deactivated.";
+            }
+            else
+            {
+                TempData["Error"] = "Could not change the user status.";
+            }
             return RedirectToAction("Index");
         }
     }

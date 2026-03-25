@@ -146,7 +146,8 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
         private static string GenerateCardNumber()
         {
-            return $"{Random.Shared.Next(1000, 9999)}-{Random.Shared.Next(1000, 9999)}-{Random.Shared.Next(1000, 9999)}-{Random.Shared.Next(1000, 9999)}";
+            var rng = Random.Shared;
+            return $"{rng.Next(1000, 9999)}{rng.Next(1000, 9999)}{rng.Next(1000, 9999)}{rng.Next(1000, 9999)}";
         }
 
         private static string HashCvc(string cvc)

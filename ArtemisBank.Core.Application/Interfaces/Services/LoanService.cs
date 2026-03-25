@@ -69,14 +69,14 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 Status = LoanStatus.Active,
                 CreatedAt = DateTime.UtcNow,
                 ClientId = dto.ClientId,
-                AssignedByAdminId = string.Empty
+                AssignedByAdminId = dto.AdminId
             };
-
-            await _repo.AddAsync(loan);
 
             // French amortization: fixed monthly payment
             var totalDebt = CalculateTotalLoanDebt(dto.Amount, dto.AnnualInterestRate, dto.TermInMonths);
             var fixedPayment = totalDebt / dto.TermInMonths;
+
+            await _repo.AddAsync(loan);
 
             for (int i = 1; i <= dto.TermInMonths; i++)
             {

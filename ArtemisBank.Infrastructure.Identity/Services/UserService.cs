@@ -338,7 +338,6 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             user.Email = dto.Email;
             user.UserName = dto.Username;
 
-
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);

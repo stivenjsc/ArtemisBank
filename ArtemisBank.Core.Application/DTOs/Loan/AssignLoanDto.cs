@@ -6,5 +6,6 @@ namespace ArtemisBank.Core.Application.DTOs.Loan
         public decimal Amount { get; set; }
         public decimal AnnualInterestRate { get; set; }
         public int TermInMonths { get; set; }
+        public string AdminId { get; set; } = string.Empty;
     }
 }
