@@ -8,10 +8,12 @@ using ArtemisBank.Core.Domain.Interfaces;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class LoanService(ILoanRepository repo, ILoanInstallmentRepository installmentRepo, ISavingsAccountRepository accountRepo, IMapper mapper) : ILoanService
+    public class LoanService(ILoanRepository repo, ILoanInstallmentRepository installmentRepo, ITransactionRepository transactionrepo, 
+        ISavingsAccountRepository accountRepo, IMapper mapper) : ILoanService
     {
         private readonly ILoanRepository _repo = repo;
         private readonly ILoanInstallmentRepository _installmentRepo = installmentRepo;
+        private readonly ITransactionRepository _transactionRepo = transactionrepo;
         private readonly ISavingsAccountRepository _accountRepo = accountRepo;
         private readonly IMapper _mapper = mapper;
 
@@ -72,11 +74,11 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 AssignedByAdminId = dto.AdminId
             };
 
+            await _repo.AddAsync(loan);
+
             // French amortization: fixed monthly payment
             var totalDebt = CalculateTotalLoanDebt(dto.Amount, dto.AnnualInterestRate, dto.TermInMonths);
             var fixedPayment = totalDebt / dto.TermInMonths;
-
-            await _repo.AddAsync(loan);
 
             for (int i = 1; i <= dto.TermInMonths; i++)
             {
@@ -100,6 +102,19 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             {
                 primaryAccount.Balance += dto.Amount;
                 await _accountRepo.UpdateAsync(primaryAccount);
+
+                await _transactionRepo.AddAsync(new Transaction
+                {
+                    Amount = dto.Amount,
+                    TransactionDate = DateTime.UtcNow,
+                    Type = TransactionType.Credit,
+                    SourceAccountNumber = loan.LoanNumber,
+                    DestinationAccountNumber = primaryAccount.AccountNumber,
+                    Description = $"Loan disbursement {loan.LoanNumber}",
+                    Status = TransactionStatus.Approved,
+                    SavingAccountId = primaryAccount.Id,
+                    CreatedAt = DateTime.UtcNow
+                });
             }
 
             return _mapper.Map<LoanDto>(loan);
@@ -167,9 +182,10 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         #region private helper methods
         private static decimal CalculateTotalLoanDebt(decimal amount, decimal annualRate, int months)
         {
+            if (months <= 0) return amount;
             if (annualRate == 0) return amount;
 
-            double monthlyRate = (double)annualRate / 100 / 12;
+            double monthlyRate = (double)annualRate / 100.0 / 12.0;
             double p = (double)amount;
             double n = months;
 

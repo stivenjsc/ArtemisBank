@@ -182,8 +182,8 @@ namespace ArtemisBank.Controllers
             {
                 LoanId = loan.Id,
                 LoanNumber = loan.LoanNumber,
-                CurrentAnnualInterestRate = loan.AnualInterestRate,
-                NewAnnualInterestRate = loan.AnualInterestRate
+                CurrentAnnualInterestRate = loan.AnnualInterestRate,
+                NewAnnualInterestRate = loan.AnnualInterestRate
             };
 
             return View(vm);

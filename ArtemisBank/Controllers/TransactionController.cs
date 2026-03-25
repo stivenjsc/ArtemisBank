@@ -87,6 +87,13 @@ namespace ArtemisBank.Controllers
         public async Task<IActionResult> ExpressPayment(ExpressPaymentViewModel vm)
         {
             var clientId = GetClientId();
+            if (vm.SourceAccountNumber == vm.DestinationAccountNumber)
+            {
+                vm.HasError = true;
+                vm.Error = "The source and destination accounts cannot be the same.";
+                vm.UserAccounts = await _savingsAccountService.GetByClientIdAsync(clientId);
+                return View(vm);
+            }
 
             if (!ModelState.IsValid)
             {

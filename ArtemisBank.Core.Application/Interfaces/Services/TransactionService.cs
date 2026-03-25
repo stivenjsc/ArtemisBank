@@ -15,6 +15,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         IMapper mapper, IUserService user, IEmailServices email, ICreditCardRepository creditCard, ILoanRepository loanrepo, 
         ILoanInstallmentRepository installment) : ITransactionService
     {
+        #region Constructor and Dependencies
         private readonly ITransactionRepository _repo = repo;
         private readonly ISavingsAccountRepository _accountRepo = accountRepo;
         private readonly IMapper _mapper = mapper;
@@ -23,6 +24,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         private readonly ICreditCardRepository _creditCardRepo = creditCard;
         private readonly ILoanRepository _loanRepo = loanrepo;
         private readonly ILoanInstallmentRepository _installmentRepo = installment;
+        #endregion
 
         public async Task<TransactionDto> GetByIdAsync(int id)
         {
@@ -38,6 +40,9 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
         public async Task<TransactionDto> TransferAsync(TransferDto dto)
         {
+            if (dto.SourceAccountNumber == dto.DestinationAccountNumber)
+                throw new InvalidOperationException("The source and destination accounts cannot be the same.");
+
             var source = await _accountRepo.GetByAccountNumberAsync(dto.SourceAccountNumber)
                 ?? throw new InvalidOperationException("Source account not found.");
 

@@ -52,7 +52,7 @@
                     <div class="product-card-body">
                         <div class="meta-row"><span class="meta-label">Principal</span><span class="meta-value">RD$ @loan.Amount.ToString("N2")</span></div>
                         <div class="meta-row"><span class="meta-label">Installments</span><span class="meta-value">@loan.PaidInstallments / @loan.TotalInstallments</span></div>
-                        <div class="meta-row"><span class="meta-label">Annual Rate</span><span class="meta-value">@loan.AnualInterestRate%</span></div>
+                        <div class="meta-row"><span class="meta-label">Annual Rate</span><span class="meta-value">@loan.AnnualInterestRate%</span></div>
                         <div class="meta-row">
                             <span class="meta-label">Status</span>
                             <span class="meta-value @(loan.IsOnTime ? "green" : "red")">
