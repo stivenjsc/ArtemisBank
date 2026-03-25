@@ -176,10 +176,29 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         {
             var transactions = await _transrepo.GetAllAsync();
 
-            var accountTransactions = transactions.Where(t => t.SourceAccountNumber == accountNumber || t.DestinationAccountNumber == accountNumber)
-                .OrderByDescending(t => t.CreatedAt).ToList();
+            var accountTransactions = transactions
+                .Where(t => t.SourceAccountNumber == accountNumber || t.DestinationAccountNumber == accountNumber)
+                .OrderByDescending(t => t.CreatedAt)
+                .Select(t =>
+                {
+                    var isOutgoing = t.SourceAccountNumber == accountNumber;
 
-            return _mapper.Map<IEnumerable<TransactionDto>>(accountTransactions);
+                    return new TransactionDto
+                    {
+                        Id = t.Id,
+                        Amount = t.Amount,
+                        TransactionDate = t.TransactionDate,
+                        Type = isOutgoing ? TransactionType.Debit : TransactionType.Credit,
+                        Beneficiary = isOutgoing ? t.DestinationAccountNumber : t.SourceAccountNumber,
+                        Origin = isOutgoing ? t.SourceAccountNumber : t.DestinationAccountNumber,
+                        Status = t.Status,
+                        SavingAccountId = t.SavingAccountId,
+                        Description = t.Description
+                    };
+                })
+                .ToList();
+
+            return accountTransactions;
         }
 
         public async Task AssignSecondaryAsync(AssignSavingsAccountDto dto)

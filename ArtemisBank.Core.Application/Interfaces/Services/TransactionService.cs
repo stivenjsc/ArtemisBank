@@ -69,7 +69,11 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 Origin = dto.SourceAccountNumber,
                 Beneficiary = dto.DestinationAccountNumber,
                 Status = TransactionStatus.Approved,
-                SavingAccountId = source.Id
+                SavingAccountId = source.Id,
+                SourceAccountNumber = dto.SourceAccountNumber,
+                DestinationAccountNumber = dto.DestinationAccountNumber,
+                Description = "Transfer",
+                CreatedAt = DateTime.UtcNow
             };
 
             await _repo.AddAsync(transaction);
@@ -104,7 +108,11 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 Origin = dto.SourceAccountNumber,
                 Beneficiary = dto.DestinationAccountNumber,
                 Status = TransactionStatus.Approved,
-                SavingAccountId = source.Id
+                SavingAccountId = source.Id,
+                SourceAccountNumber = dto.SourceAccountNumber,
+                DestinationAccountNumber = dto.DestinationAccountNumber,
+                Description = "Express payment",
+                CreatedAt = DateTime.UtcNow
             };
 
             await _repo.AddAsync(transaction);
