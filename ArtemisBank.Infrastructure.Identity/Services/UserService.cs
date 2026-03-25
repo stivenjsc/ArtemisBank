@@ -310,7 +310,8 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return false;
 
-            user.IsActive = isActive;
+            user.IsActive = !user.IsActive;
+            
             if (isActive)
             {
                 user.EmailConfirmed = true;
