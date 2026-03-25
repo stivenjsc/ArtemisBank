@@ -23,6 +23,14 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             return MapToDto(user, roles.FirstOrDefault());
         }
+
+        public async Task<bool> ExistsByCedulaAsync(string cedula, string? excludingUserId = null)
+        {
+            return await _userManager.Users.AnyAsync(u =>
+                u.Cedula == cedula &&
+                (excludingUserId == null || u.Id != excludingUserId));
+        }
+
         public async Task<string?> GetActivationTokenAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);

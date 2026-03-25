@@ -21,6 +21,11 @@
                 </div>
             </div>
 
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert-artemis alert-artemis-danger mb-3"></div>
+            }
+
             <form asp-controller="User" asp-action="Create" method="post">
                 @Html.AntiForgeryToken()
                 <div class="row g-3">

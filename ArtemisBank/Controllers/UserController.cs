@@ -13,6 +13,7 @@ namespace ArtemisBank.Controllers
     public class UserController(IUserService userService, IUserReadOnlyService userReadonly, ISavingsAccountService savingsAccountService, 
         ITransactionService transactionService) : Controller
     {
+        private const string DuplicateCedulaMessage = "Ya existe un usuario con esa cedula.";
         private readonly IUserService _userService = userService;
         private readonly IUserReadOnlyService _userReadOnlyService = userReadonly;
         private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
@@ -44,6 +45,13 @@ namespace ArtemisBank.Controllers
                 }
                 return View(vm);
             }
+
+            if (await _userReadOnlyService.ExistsByCedulaAsync(vm.Cedula))
+            {
+                AddDuplicateCedulaError();
+                return View(vm);
+            }
+
             var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var registered = await _userService.RegisterAsync(
                 vm.FirstName,
@@ -59,8 +67,15 @@ namespace ArtemisBank.Controllers
 
             if (!registered)
             {
+                if (await _userReadOnlyService.ExistsByCedulaAsync(vm.Cedula))
+                {
+                    AddDuplicateCedulaError();
+                    return View(vm);
+                }
+
                 vm.HasError = true;
                 vm.Error = "The user could not be created. Please verify the information and try again.";
+                ModelState.AddModelError(string.Empty, vm.Error);
                 return View(vm);
             }
             TempData["Success"] = "User created. Activation email sent.";
@@ -95,6 +110,12 @@ namespace ArtemisBank.Controllers
 
             try
             {
+                if (await _userReadOnlyService.ExistsByCedulaAsync(vm.Cedula, vm.Id))
+                {
+                    AddDuplicateCedulaError();
+                    return View(vm);
+                }
+
                 var updateResult = await _userService.UpdateAsync(new UpdateUserDto
                 {
                     Id = vm.Id,
@@ -107,7 +128,17 @@ namespace ArtemisBank.Controllers
                     ConfirmPassword = vm.ConfirmPassword
                 });
 
-                if (!updateResult) throw new Exception("Could not update user.");
+                if (!updateResult)
+                {
+                    if (await _userReadOnlyService.ExistsByCedulaAsync(vm.Cedula, vm.Id))
+                    {
+                        AddDuplicateCedulaError();
+                        return View(vm);
+                    }
+
+                    ModelState.AddModelError(string.Empty, "Could not update user.");
+                    return View(vm);
+                }
 
                 if (vm.Role == UserRole.Client && vm.AdditionalAmount.HasValue && vm.AdditionalAmount.Value > 0)
                 {
@@ -134,13 +165,12 @@ namespace ArtemisBank.Controllers
             }
             catch (Exception ex)
             {
-                
                 vm.HasError = true;
                 vm.Error = ex.Message;
+                ModelState.AddModelError(string.Empty, ex.Message);
                 return View(vm);
             }
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStatus(string userId, bool activate)
@@ -168,6 +198,11 @@ namespace ArtemisBank.Controllers
                 TempData["Error"] = "Could not change the user status.";
             }
             return RedirectToAction("Index");
+        }
+
+        private void AddDuplicateCedulaError()
+        {
+            ModelState.AddModelError(nameof(SaveUserViewModel.Cedula), DuplicateCedulaMessage);
         }
     }
 }
