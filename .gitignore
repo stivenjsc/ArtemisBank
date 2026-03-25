@@ -7,8 +7,8 @@
 .env
 
 # Local app settings
-ArtemisBank/appsettings.json
-appsettings.json
+**/appsettings.json
+**/appsettings.Development.json
 
 # User-specific files
 *.rsuser
