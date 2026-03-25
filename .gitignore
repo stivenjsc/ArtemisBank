@@ -7,7 +7,7 @@
 .env
 
 # Local app settings
-ArtemisBank/appsettings.json
+**appsettings.json
 
 # User-specific files
 *.rsuser
@@ -15,7 +15,6 @@ ArtemisBank/appsettings.json
 *.user
 *.userosscache
 *.sln.docstates
-**/wwwroot/lib/
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
