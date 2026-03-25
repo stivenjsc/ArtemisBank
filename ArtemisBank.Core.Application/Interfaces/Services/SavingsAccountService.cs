@@ -125,7 +125,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
         public async Task<bool> TransferAsync(string sourceAccountNumber, string destinationAccountNumber, decimal amount)
         {
-            if (amount <= 0) return false;
+            if (amount <= 0 || sourceAccountNumber == destinationAccountNumber) return false;
 
             var source = await _repo.GetByAccountNumberAsync(sourceAccountNumber);
             var destination = await _repo.GetByAccountNumberAsync(destinationAccountNumber);

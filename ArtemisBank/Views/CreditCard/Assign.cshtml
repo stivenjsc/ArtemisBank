@@ -13,6 +13,13 @@
     <div class="stat-value money">@Model.AverageDebt.ToString("N2")</div>
 </div>
 
+@if (Model.HasError)
+{
+    <div class="alert-artemis alert-artemis-danger mb-3">
+        <i class="fa-solid fa-circle-exclamation"></i> @Model.Error
+    </div>
+}
+
 <form method="post" asp-controller="CreditCard" asp-action="Assign">
     @Html.AntiForgeryToken()
     <div class="table-card mb-4">

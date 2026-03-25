@@ -1,9 +1,7 @@
 using ArtemisBank.Core.Application.DTOs.CreditCard;
 using ArtemisBank.Core.Application.Interfaces.IServices;
-using ArtemisBank.Core.Application.Interfaces.Services;
 using ArtemisBank.Core.Application.ViewModels.CreditCard;
 using ArtemisBank.Core.Domain.Enums;
-using ArtemisBank.Infrastructure.Identity.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -77,10 +75,22 @@ namespace ArtemisBank.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Assign(AssignCreditCardViewModel vm)
         {
-            if (!ModelState.IsValid)
+            async Task ReloadVm()
             {
                 vm.AverageDebt = await _loanService.GetAverageDebtAsync();
                 vm.Clients = await _userService.GetActiveClientsAsync(null);
+            }
+            if (!ModelState.IsValid)
+            {
+                await ReloadVm();
+                return View(vm);
+            }
+
+            if (string.IsNullOrEmpty(vm.ClientId))
+            {
+                vm.HasError = true;
+                vm.Error = "You must select a client from the list.";
+                await ReloadVm();
                 return View(vm);
             }
 
@@ -91,14 +101,14 @@ namespace ArtemisBank.Controllers
                     ClientId = vm.ClientId,
                     CreditLimit = vm.CreditLimit
                 });
+                TempData["Success"] = "Card assigned successfully.";
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
                 vm.HasError = true;
                 vm.Error = ex.Message;
-                vm.AverageDebt = await _loanService.GetAverageDebtAsync();
-                vm.Clients = await _userService.GetActiveClientsAsync(null);
+                await ReloadVm();
                 return View(vm);
             }
         }
