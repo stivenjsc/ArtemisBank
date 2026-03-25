@@ -1,18 +1,20 @@
-using System.Security.Cryptography;
-using System.Text;
-using AutoMapper;
 using ArtemisBank.Core.Application.DTOs;
 using ArtemisBank.Core.Application.DTOs.CreditCard;
+using ArtemisBank.Core.Application.DTOs.CreditCardConsumption;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Entities;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Domain.Interfaces;
+using AutoMapper;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class CreditCardService(ICreditCardRepository repo, ISavingsAccountRepository accountRepo, IMapper mapper, IUserReadOnlyService user, IEmailServices email) : ICreditCardService
+    public class CreditCardService(ICreditCardRepository repo, ICreditCardConsumptionRepository consumptionService,ISavingsAccountRepository accountRepo, IMapper mapper, IUserReadOnlyService user, IEmailServices email) : ICreditCardService
     {
         private readonly ICreditCardRepository _repo = repo;
+        private readonly ICreditCardConsumptionRepository _consumptionRepo = consumptionService;
         private readonly ISavingsAccountRepository _accountRepo = accountRepo;
         private readonly IMapper _mapper = mapper;
         private readonly IUserReadOnlyService _userService = user;
@@ -138,6 +140,17 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
             await _repo.UpdateAsync(card);
             await _accountRepo.UpdateAsync(account);
+
+            await _consumptionRepo.AddAsync(new CreditCardConsumption
+            {
+                Amount = dto.Amount,
+                TransactionDate = DateTime.UtcNow,
+                CommerceName = "AVANCE",
+                Status = ConsumptionStatus.Approved,
+                CreditCardId = dto.CreditCardId,
+                CommerceId = null
+            });
+
             return true;
         }
 
