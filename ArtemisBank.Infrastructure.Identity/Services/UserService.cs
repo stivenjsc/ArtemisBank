@@ -90,6 +90,9 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var existingEmail = await _userManager.FindByEmailAsync(email);
             if (existingEmail != null) return false;
 
+            var existingCedula = await _userManager.Users.AnyAsync(u => u.Cedula == cedula);
+            if (existingCedula) return false;
+
             var parsedRole = Enum.Parse<UserRole>(role);
 
             var user = new ApplicationUser
@@ -104,7 +107,16 @@ namespace ArtemisBank.Infrastructure.Identity.Services
                 Role = parsedRole
             };
 
-            var result = await _userManager.CreateAsync(user, password);
+            IdentityResult result;
+            try
+            {
+                result = await _userManager.CreateAsync(user, password);
+            }
+            catch (DbUpdateException)
+            {
+                return false;
+            }
+
             if (!result.Succeeded) return false;
 
             if (parsedRole == UserRole.Client && initialAmount >= 0)
@@ -131,6 +143,9 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var existingEmail = await _userManager.FindByEmailAsync(email);
             if (existingEmail != null) return false;
 
+            var existingCedula = await _userManager.Users.AnyAsync(u => u.Cedula == cedula);
+            if (existingCedula) return false;
+
             var user = new ApplicationUser
             {
                 FirstName = firstName,
@@ -144,7 +159,15 @@ namespace ArtemisBank.Infrastructure.Identity.Services
                 CommerceId = commerceId
             };
 
-            var result = await _userManager.CreateAsync(user, password);
+            IdentityResult result;
+            try
+            {
+                result = await _userManager.CreateAsync(user, password);
+            }
+            catch (DbUpdateException)
+            {
+                return false;
+            }
 
             if (!result.Succeeded) return false;
 
@@ -260,6 +283,10 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var existingUser = await _userManager.FindByNameAsync(dto.Username);
             if (existingUser != null && existingUser.Id != dto.Id) return false;
 
+            var existingCedula = await _userManager.Users
+                .FirstOrDefaultAsync(u => u.Cedula == dto.Cedula);
+            if (existingCedula != null && existingCedula.Id != dto.Id) return false;
+
             user.FirstName = dto.FirstName;
             user.LastName = dto.LastName;
             user.Cedula = dto.Cedula;
@@ -273,7 +300,16 @@ namespace ArtemisBank.Infrastructure.Identity.Services
                 if (!passwordResult.Succeeded) return false;
             }
 
-            var result = await _userManager.UpdateAsync(user);
+            IdentityResult result;
+            try
+            {
+                result = await _userManager.UpdateAsync(user);
+            }
+            catch (DbUpdateException)
+            {
+                return false;
+            }
+
             return result.Succeeded;
         }
 

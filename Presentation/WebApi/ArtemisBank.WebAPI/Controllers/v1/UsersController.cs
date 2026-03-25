@@ -13,6 +13,7 @@ namespace ArtemisBank.WebAPI.Controllers.v1
     public class UsersController( IUserService userService, ISavingsAccountService savingsAccountService, IUserReadOnlyService userReadOnlyService,
         ICommerceService commerceService) : BaseApiController
     {
+        private const string DuplicateCedulaMessage = "Ya existe un usuario con esa cedula.";
         private readonly IUserService _userService = userService;
         private readonly IUserReadOnlyService _userReadOnlyService = userReadOnlyService;
         private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
@@ -92,6 +93,9 @@ namespace ArtemisBank.WebAPI.Controllers.v1
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (await _userReadOnlyService.ExistsByCedulaAsync(request.Cedula))
+                return Conflict(new { message = DuplicateCedulaMessage });
+
             var AdminId = User.FindFirst("uid")?.Value;
 
             var result = await _userService.RegisterAsync(
@@ -107,7 +111,12 @@ namespace ArtemisBank.WebAPI.Controllers.v1
                 );
 
             if (!result)
-                return Conflict(new { message = "Username or email already exists." });
+            {
+                if (await _userReadOnlyService.ExistsByCedulaAsync(request.Cedula))
+                    return Conflict(new { message = DuplicateCedulaMessage });
+
+                return Conflict(new { message = "The user could not be created. Verify that username, email, and cedula are unique." });
+            }
 
             return StatusCode(201, new { message = "User created successfully." });
         }
@@ -135,6 +144,9 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            if (await _userReadOnlyService.ExistsByCedulaAsync(request.Cedula))
+                return Conflict(new { message = DuplicateCedulaMessage });
+
             var commerce = await _commerceService.GetByIdAsync(commerceId);
             if (commerce == null)
                 return BadRequest(new { message = "Commerce not found." });
@@ -153,7 +165,12 @@ namespace ArtemisBank.WebAPI.Controllers.v1
                 commerceId);
 
             if (!result)
-                return Conflict(new { message = "Username or email already exists." });
+            {
+                if (await _userReadOnlyService.ExistsByCedulaAsync(request.Cedula))
+                    return Conflict(new { message = DuplicateCedulaMessage });
+
+                return Conflict(new { message = "The user could not be created. Verify that username, email, and cedula are unique." });
+            }
 
             return StatusCode(201, new { message = "Commerce user created successfully." });
         }
@@ -190,6 +207,9 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             if (!string.IsNullOrEmpty(request.Password) && request.Password != request.ConfirmPassword)
                 return BadRequest(new { message = "Passwords do not match." });
 
+            if (await _userReadOnlyService.ExistsByCedulaAsync(request.Cedula, id))
+                return Conflict(new { message = DuplicateCedulaMessage });
+
             var updateDto = new UpdateUserDto
             {
                 Id = id,
@@ -206,7 +226,12 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             var result = await _userService.UpdateAsync(updateDto);
 
             if (!result)
-                return Conflict(new { message = "Username or email already exists." });
+            {
+                if (await _userReadOnlyService.ExistsByCedulaAsync(request.Cedula, id))
+                    return Conflict(new { message = DuplicateCedulaMessage });
+
+                return Conflict(new { message = "The user could not be updated. Verify that username, email, and cedula are unique." });
+            }
 
             return NoContent();
         }

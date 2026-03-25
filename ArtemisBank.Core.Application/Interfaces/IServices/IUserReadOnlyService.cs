@@ -7,6 +7,7 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
     {
         // User management
         Task<UserDto> GetByIdAsync(string userId);
+        Task<bool> ExistsByCedulaAsync(string cedula, string? excludingUserId = null);
         Task<string?> GetActivationTokenAsync(string userId);
 
         Task<IEnumerable<UserDto>> GetActiveClientsAsync(string? cedula = null);

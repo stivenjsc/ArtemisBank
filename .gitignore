@@ -7,7 +7,7 @@
 .env
 
 # Local app settings
-**appsettings.json
+*appsettings.json
 
 # User-specific files
 *.rsuser
