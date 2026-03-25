@@ -28,14 +28,23 @@
                 <input type="hidden" asp-for="ClientName" />
                 <input type="hidden" asp-for="AverageDebt" />
                 <input type="hidden" asp-for="CurrentDebt" />
+                <input type="hidden" asp-for="IsHighRisk" />
 
                 @if (Model.IsHighRisk)
                 {
-                    <div class="mb-3 p-3 rounded-3" style="background:#fff8f0; border:1px solid #fed7aa">
+                    <div class="mb-3 p-3 rounded-3" style="background:#fff8f0;border:1px solid #fed7aa">
                         <label class="form-check-label d-flex align-items-center gap-2" style="cursor:pointer">
-                            <input type="checkbox" name="RiskConfirmed" value="true" class="form-check-input mt-0" style="width:18px; height:18px" />
-                            <span style="font-size:.85rem; color:#92400e">I confirm that I want to assign this loan despite the high risk</span>
+                            <input asp-for="RiskConfirmed" class="form-check-input mt-0" style="width:18px;height:18px" />
+                            <span style="font-size:.85rem;color:#92400e">
+                                I confirm that I want to assign this loan despite the high risk
+                            </span>
                         </label>
+                    </div>
+                }
+                @if (Model.HasError)
+                {
+                    <div class="alert-artemis alert-artemis-danger mb-3">
+                        <i class="fa-solid fa-circle-exclamation"></i> @Model.Error
                     </div>
                 }
 
@@ -57,6 +66,7 @@
                         <span class="input-group-text bg-white">RD$</span>
                         <input asp-for="Amount" type="number" step="0.01" min="1" class="form-control" placeholder="0.00" />
                     </div>
+                    <span asp-validation-for="Amount" class="text-danger" style="font-size:.78rem"></span>
                 </div>
 
                 <div class="mb-4">
@@ -64,6 +74,7 @@
                     <div class="input-group">
                         <input asp-for="AnnualInterestRate" type="number" step="0.01" min="0" class="form-control" placeholder="12.00" />
                         <span class="input-group-text bg-white">%</span>
+                        <span asp-validation-for="AnnualInterestRate" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                 </div>
 

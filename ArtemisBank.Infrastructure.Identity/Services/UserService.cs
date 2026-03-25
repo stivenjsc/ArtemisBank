@@ -300,15 +300,18 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             if (adminId == userId) return false;
 
             var admin = await _userManager.FindByIdAsync(adminId);
-            if (admin == null) return false;
-
-            var changes = await _userManager.IsInRoleAsync(admin, UserRole.Admin.ToString());
-            if (!changes) return false;
+            if (admin == null || !await _userManager.IsInRoleAsync(admin, UserRole.Admin.ToString()))
+                return false;
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return false;
 
             user.IsActive = isActive;
+            if (isActive)
+            {
+                user.EmailConfirmed = true;
+            }
+
             var result = await _userManager.UpdateAsync(user);
             return result.Succeeded;
         }
@@ -329,6 +332,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             user.Cedula = dto.Cedula;
             user.Email = dto.Email;
             user.UserName = dto.Username;
+
 
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {

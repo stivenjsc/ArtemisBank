@@ -1,9 +1,7 @@
 using ArtemisBank.Core.Application.DTOs.Loan;
-using ArtemisBank.Core.Application.DTOs.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Application.ViewModels.Client;
 using ArtemisBank.Core.Application.ViewModels.Loan;
-using ArtemisBank.Core.Application.ViewModels.User;
 using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -87,14 +85,16 @@ namespace ArtemisBank.Controllers
             {
                 return NotFound();
             }
-
-            var hasActiveLoan = await _loanService.ClientHasActiveLoanAsync(vm.SelectedClientId);
+            var averageDebt = await _loanService.GetAverageDebtAsync();
+            var currentDebt = await _loanService.GetTotalDebtByClientIdAsync(vm.SelectedClientId);
 
             var assignVm = new AssignLoanViewModel
             {
                 ClientId = vm.SelectedClientId,
                 ClientName = $"{client.FirstName} {client.LastName}",
-                IsHighRisk = hasActiveLoan
+                AverageDebt = averageDebt,
+                CurrentDebt = currentDebt,
+                IsHighRisk = currentDebt > averageDebt
             };
 
             return View("Assign", assignVm);
@@ -135,13 +135,13 @@ namespace ArtemisBank.Controllers
         {
             if (!ModelState.IsValid) return View(vm);
             var riskInfo = await _loanService.EvaluateRiskAsync(vm.ClientId, vm.Amount, vm.AnnualInterestRate, vm.TermInMonths);
-            if (riskInfo.IsHighRisk && !vm.IsHighRisk)
+
+            if (riskInfo.IsHighRisk && !vm.RiskConfirmed)
             {
                 vm.IsHighRisk = true;
                 vm.AverageDebt = riskInfo.AverageDebt;
                 vm.CurrentDebt = riskInfo.CurrentDebt;
-
-                vm.RiskMessage = riskInfo.CurrentDebt > riskInfo.AverageDebt ? "High Risk: The client's current debt already exceeds the bank average."
+                vm.RiskMessage = riskInfo.CurrentDebt > riskInfo.AverageDebt ? "High Risk: The client's current debt already exceeds the bank average." 
                     : "High Risk: This new loan will push the client's total debt above the bank average.";
 
                 return View(vm);

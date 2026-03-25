@@ -24,10 +24,12 @@ namespace ArtemisBank.Core.Application.ViewModels.Loan
 
         public bool IsHighRisk { get; set; }
 
+        public bool RiskConfirmed { get; set; }
+
+        public string? RiskMessage { get; set; }
         public bool HasError { get; set; }
         public string? Error { get; set; }
         public decimal AverageDebt { get; set; }
         public decimal CurrentDebt { get; set; }
-        public string RiskMessage { get; set; } = string.Empty;
     }
 }

@@ -56,7 +56,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             string loanNumber;
             do
             {
-                loanNumber = $"LN{Random.Shared.Next(100000000, 999999999)}";
+                loanNumber = Random.Shared.Next(100000000, 999999999).ToString();
             }
             while (await _repo.GetByLoanNumberAsync(loanNumber) != null);
 
