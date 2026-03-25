@@ -63,7 +63,7 @@ namespace ArtemisBank.Controllers
 
             var account = await _savingsAccountService.GetByAccountNumberAsync(vm.AccountNumber);
 
-            if (account == null || !account.IsActive)
+            if (account == null || account.Status != AccountStatus.Active)
             {
                 vm.HasError = true;
                 vm.Error = "The account number entered is not valid.";
@@ -121,7 +121,7 @@ namespace ArtemisBank.Controllers
 
             var account = await _savingsAccountService.GetByAccountNumberAsync(vm.AccountNumber);
 
-            if (account == null || !account.IsActive)
+            if (account == null || account.Status != AccountStatus.Active)
             {
                 vm.HasError = true;
                 vm.Error = "The account number entered is not valid.";
@@ -185,7 +185,7 @@ namespace ArtemisBank.Controllers
             }
 
             var account = await _savingsAccountService.GetByAccountNumberAsync(vm.SourceAccountNumber);
-            if (account == null || !account.IsActive)
+            if (account == null || account.Status != AccountStatus.Active)
             {
                 vm.HasError = true;
                 vm.Error = "The originating account number is invalid.";
@@ -258,7 +258,7 @@ namespace ArtemisBank.Controllers
             }
 
             var account = await _savingsAccountService.GetByAccountNumberAsync(vm.SourceAccountNumber);
-            if (account == null || !account.IsActive)
+            if (account == null || account.Status != AccountStatus.Active)
             {
                 vm.HasError = true;
                 vm.Error = "The originating account number is invalid.";
@@ -333,7 +333,7 @@ namespace ArtemisBank.Controllers
             var sourceAccount = await _savingsAccountService
                 .GetByAccountNumberAsync(vm.SourceAccountNumber);
 
-            if (sourceAccount == null || !sourceAccount.IsActive)
+            if (sourceAccount == null || sourceAccount.Status != AccountStatus.Active)
             {
                 vm.HasError = true;
                 vm.Error = "The originating account number is invalid.";
@@ -350,7 +350,7 @@ namespace ArtemisBank.Controllers
             var destAccount = await _savingsAccountService
                 .GetByAccountNumberAsync(vm.DestinationAccountNumber);
 
-            if (destAccount == null || !destAccount.IsActive)
+            if (destAccount == null || destAccount.Status != AccountStatus.Active)
             {
                 vm.HasError = true;
                 vm.Error = "The destination account number is invalid.";

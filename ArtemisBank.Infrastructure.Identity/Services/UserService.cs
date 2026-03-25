@@ -6,19 +6,23 @@ using ArtemisBank.Core.Domain.Interfaces;
 using ArtemisBank.Infrastructure.Identity.Entities;
 using ArtemisBank.Infrastructure.Shared.EmailServices;
 using ArtemisBank.Infrastructure.Shared.EmailServices.IEmailService;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace ArtemisBank.Infrastructure.Identity.Services
 {
     public class UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ILoanRepository loanRepository,
-        ICorreoServices emailServices, ISavingsAccountService savingsAccountService) : IUserService
+        ICorreoServices emailServices, ISavingsAccountService savingsAccountService, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
         private readonly ILoanRepository _loanRepository = loanRepository;
         private readonly ICorreoServices _emailService = emailServices;
         private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+        private readonly IConfiguration _configuration = configuration;
 
         public async Task<AuthenticationResult> AuthenticateAsync(string username, string password)
         {
@@ -437,17 +441,34 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             }
         }
 
-        private static string BuildActivationLink(string token)
+        private string BuildActivationLink(string token)
         {
             var encodedToken = Uri.EscapeDataString(token);
-            return $"https://localhost:7108/Account/Activate?token={encodedToken}";
+            return $"{ResolveBaseUrl()}/Account/Activate?token={encodedToken}";
         }
 
-        private static string BuildResetPasswordLink(string username, string token)
+        private string BuildResetPasswordLink(string username, string token)
         {
             var encodedUsername = Uri.EscapeDataString(username);
             var encodedToken = Uri.EscapeDataString(token);
-            return $"https://localhost:7108/Login/ResetPassword?username={encodedUsername}&token={encodedToken}";
+            return $"{ResolveBaseUrl()}/Login/ResetPassword?username={encodedUsername}&token={encodedToken}";
+        }
+
+        private string ResolveBaseUrl()
+        {
+            var request = _httpContextAccessor.HttpContext?.Request;
+            if (request?.Host.HasValue == true)
+            {
+                return $"{request.Scheme}://{request.Host.Value}";
+            }
+
+            var configuredUrl = _configuration["ApplicationUrl"];
+            if (!string.IsNullOrWhiteSpace(configuredUrl))
+            {
+                return configuredUrl.TrimEnd('/');
+            }
+
+            return "https://localhost:7108";
         }
 
         private static UserDto MapToDto(ApplicationUser user, string? roleName) =>

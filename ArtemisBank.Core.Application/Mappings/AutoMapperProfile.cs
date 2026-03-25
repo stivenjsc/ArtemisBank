@@ -8,6 +8,7 @@ using ArtemisBank.Core.Application.DTOs.LoanInstallment;
 using ArtemisBank.Core.Application.DTOs.SavingsAccount;
 using ArtemisBank.Core.Application.DTOs.Transaction;
 using ArtemisBank.Core.Domain.Entities;
+using ArtemisBank.Core.Domain.Enums;
 
 namespace ArtemisBank.Core.Application.Mappings
 {
@@ -15,7 +16,9 @@ namespace ArtemisBank.Core.Application.Mappings
     {
         public AutoMapperProfile()
         {
-            CreateMap<SavingsAccount, SavingsAccountDto>().ReverseMap();
+            CreateMap<SavingsAccount, SavingsAccountDto>()
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.Status == AccountStatus.Active))
+                .ReverseMap();
             CreateMap<CreditCard, CreditCardDto>().ReverseMap();
 
             #region Loan Mapping
