@@ -75,6 +75,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             {
                 Success = true,
                 UserId = user.Id,
+                CommerceId = user.CommerceId ?? 0,
                 UserName = user.UserName!,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
@@ -310,8 +311,8 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return false;
 
-            user.IsActive = !user.IsActive;
-            
+            user.IsActive = isActive;
+
             if (isActive)
             {
                 user.EmailConfirmed = true;

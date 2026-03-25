@@ -16,28 +16,28 @@ namespace ArtemisBank.WebAPI.Controllers.v1
         private readonly IJwtService _jwtService = jwtService;
 
         /// <summary>
-        /// Activa una cuenta de usuario mediante un token enviado por correo.
+        /// Confirma y activa una cuenta de usuario mediante un token enviado por correo.
         /// </summary>
-        /// <param name="token">Token de activación único.</param>
-        /// <response code="200">Cuenta activada exitosamente.</response>
-        /// <response code="400">El token es inválido o ha expirado.</response>
+        /// <response code="204">Cuenta activada exitosamente.</response>
+        /// <response code="400">El token es inválido o está vacío.</response>
         [Authorize]
-        [HttpGet("activate")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPost("confirm")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Activate([FromBody] ConfirmAccountRequest request)
+        public async Task<IActionResult> Confirm([FromBody] ConfirmAccountRequest request)
         {
-            if (string.IsNullOrEmpty(request.Token))
+            if (request is null || string.IsNullOrWhiteSpace(request.Token))
             {
-                return BadRequest(new { message = "The activation link is invalid." });
+                return BadRequest(new { message = "Token is required." });
             }
 
             var result = await _userService.ActivateAccountAsync(request.Token);
             if (!result)
             {
-                return BadRequest(new { message = "Invalid activation link." });
+                return BadRequest(new { message = "Invalid token." });
             }
-            return Ok(new { message = "Your account has been activated successfully." });
+
+            return NoContent();
         }
 
         /// <summary>
@@ -117,8 +117,12 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             if (request.Password != request.ConfirmPassword)
                 return BadRequest(new { message = "The passwords do not match." });
 
+            var user = await _userService.GetByIdAsync(request.UserId);
+            if (user == null || string.IsNullOrWhiteSpace(user.UserName))
+                return BadRequest(new { message = "The user is invalid." });
+
             var result = await _userService.ResetPasswordAsync(
-                request.UserId, request.Token, request.Password);
+                user.UserName, request.Token, request.Password);
 
             if (!result)
                 return BadRequest(new { message = "The password could not be reset." });

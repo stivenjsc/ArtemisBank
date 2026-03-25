@@ -1,4 +1,6 @@
-﻿using ArtemisBank.Infrastructure.Identity.Entities;
+﻿using ArtemisBank.Core.Domain.Entities;
+using ArtemisBank.Core.Domain.Interfaces;
+using ArtemisBank.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,7 +10,6 @@ namespace ArtemisBank.Infrastructure.Identity.Seeds
 {
     public static class IdentitySeedExtensions
     {
-        public class IdentitySeed { }
         public static async Task SeedIdentityDataAsync(this IHost host)
         {
             using var scope = host.Services.CreateScope();
@@ -16,16 +17,34 @@ namespace ArtemisBank.Infrastructure.Identity.Seeds
 
             try
             {
+                var commerceRepository = services.GetRequiredService<ICommerceRepository>();
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
+                var defaultCommerce = (await commerceRepository.GetAllAsync())
+                    .FirstOrDefault(c => c.Name == "Default Commerce");
+
+                if (defaultCommerce == null)
+                {
+                    defaultCommerce = new Commerce
+                    {
+                        Name = "Default Commerce",
+                        Description = "Default seeded commerce",
+                        Logo = "default-logo.png",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await commerceRepository.AddAsync(defaultCommerce);
+                }
+
                 await DefaultRoles.SeedAsync(roleManager);
-                await DefaultUsers.SeedAsync(userManager);
+                await DefaultUsers.SeedAsync(userManager, defaultCommerce.Id);
             }
             catch (Exception ex)
             {
                 var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-                var logger = services.GetRequiredService<ILogger<IdentitySeed>>();
+                var logger = loggerFactory.CreateLogger("IdentitySeed");
                 logger.LogError(ex, "An error occurred during Identity seeding.");
             }
         }
