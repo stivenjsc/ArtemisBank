@@ -1,8 +1,10 @@
 ﻿using ArtemisBank.Core.Application.Interfaces.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArtemisBank.Controllers
 {
+    [Authorize]
     public class AccountController(IUserService userService) : Controller
     {
         private readonly IUserService _userService = userService;
@@ -11,7 +13,8 @@ namespace ArtemisBank.Controllers
         {
             return View();
         }
-
+        
+        [AllowAnonymous]
         public async Task<IActionResult> Activate(string token)
         {
             if (string.IsNullOrEmpty(token))
@@ -22,13 +25,8 @@ namespace ArtemisBank.Controllers
 
             var result = await _userService.ActivateAccountAsync(token);
 
-            if (!result)
-            {
-                TempData["Error"] = "The activation link is invalid or has already been used.";
-                return RedirectToAction("Index", "Login");
-            }
-
-            TempData["Success"] = "Your account has been activated. You can now log in.";
+            TempData[result ? "Success" : "Error"] = result ? "Account activated successfully. You can now log in." 
+                : "Invalid or expired activation link.";
             return RedirectToAction("Index", "Login");
         }
         public IActionResult AccessDenied()

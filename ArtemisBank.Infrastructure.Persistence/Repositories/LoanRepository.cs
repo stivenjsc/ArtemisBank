@@ -11,6 +11,13 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
     public class LoanRepository(ArtemisBankDbContext context, IdentityContext identityContext) : GenericRepository<Loan>(context), ILoanRepository
     {
         private readonly IdentityContext _identityContext = identityContext;
+
+        public override async Task<Loan?> GetByIdAsync(int id)
+        {
+            return await _context.Loans
+                .Include(l => l.Installments)
+                .FirstOrDefaultAsync(l => l.Id == id);
+        }
         public async Task<bool> ClientHasActiveLoanAsync(string clientId)
         {
             return await _dbSet.AnyAsync(l => l.ClientId == clientId && l.Status == LoanStatus.Active);
@@ -41,12 +48,8 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
 
         public async Task<IEnumerable<Loan>> GetAllPagedAsync(int page, int pageSize, LoanStatus? status = null, string? cedula = null)
         {
-            var query = _dbSet.AsNoTracking();
+            var query = _dbSet.AsNoTracking().Include(l => l.Installments).AsQueryable();
 
-            if (status.HasValue)
-            {
-                query = query.Where(l => l.Status == status);
-            }
             if (!string.IsNullOrEmpty(cedula))
             {
                 var clientId = await _identityContext.Users.Where(u => u.Cedula == cedula).Select(u => u.Id).FirstOrDefaultAsync();
@@ -58,6 +61,12 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
                 {
                     return [];
                 }
+                query = query.Where(l => l.ClientId == clientId);
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(l => l.Status == status);
             }
 
             return await query.OrderByDescending(l => l.Status == LoanStatus.Active).ThenByDescending(l => l.CreatedAt)

@@ -38,22 +38,24 @@ namespace ArtemisBank.Infrastructure.Persistence.Repositories
 
         public async Task<IEnumerable<CreditCard>> GetAllPagedAsync(int page, int pageSize, CardStatus? status = null, string? cedula = null)
         {
-            var query = _dbSet.AsNoTracking();
-            var clientId = await _identityContext.Users.Where(u => u.Cedula == cedula).Select(u => u.Id).FirstOrDefaultAsync();
+            var query = _dbSet.AsNoTracking().AsQueryable();
 
-            if (clientId == null)
+            if (!string.IsNullOrEmpty(cedula))
             {
-                return [];
+                var clientId = await _identityContext.Users.Where(u => u.Cedula == cedula).Select(u => u.Id).FirstOrDefaultAsync();
+                if (clientId != null)
+                {
+                    query = query.Where(cc => cc.ClientId == clientId);
+                }
+                else
+                {
+                    return [];
+                }
             }
 
             if (status.HasValue)
             {
-                query = query.Where(cc => cc.Status == status.Value);
-            }
-
-            if (!string.IsNullOrEmpty(cedula))
-            {
-                query = query.Where(cc => cc.ClientId == clientId);
+                query = query.Where(cc => cc.Status == status);
             }
 
             return await query.OrderByDescending(cc => cc.Status == CardStatus.Active).ThenByDescending(cc => cc.CreatedAt)
