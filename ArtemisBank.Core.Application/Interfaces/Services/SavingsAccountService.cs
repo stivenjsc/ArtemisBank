@@ -179,7 +179,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             var accountTransactions = transactions.Where(t => t.SourceAccountNumber == accountNumber || t.DestinationAccountNumber == accountNumber)
                 .OrderByDescending(t => t.CreatedAt).ToList();
 
-            return _mapper.Map<IEnumerable<TransactionDto>>(transactions);
+            return _mapper.Map<IEnumerable<TransactionDto>>(accountTransactions);
         }
 
         public async Task AssignSecondaryAsync(AssignSavingsAccountDto dto)
