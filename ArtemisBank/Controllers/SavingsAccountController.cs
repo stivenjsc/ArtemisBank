@@ -10,10 +10,10 @@ namespace ArtemisBank.Controllers
     [Authorize(Roles = nameof(UserRole.Admin))]
     public class SavingsAccountController(
         ISavingsAccountService savingsAccountService,
-        IUserService userService) : Controller
+        IUserReadOnlyService userService) : Controller
     {
         private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
-        private readonly IUserService _userService = userService;
+        private readonly IUserReadOnlyService _userService = userService;
         
         #region List
 

@@ -10,21 +10,13 @@ namespace ArtemisBank.WebAPI.Controllers.v1
 {
     [ApiVersion("1.0")]
     [Authorize(Roles = "Admin")]
-    public class UsersController : BaseApiController
+    public class UsersController( IUserService userService, ISavingsAccountService savingsAccountService, IUserReadOnlyService userReadOnlyService,
+        ICommerceService commerceService) : BaseApiController
     {
-        private readonly IUserService _userService;
-        private readonly ISavingsAccountService _savingsAccountService;
-        private readonly ICommerceService _commerceService;
-
-        public UsersController(
-            IUserService userService,
-            ISavingsAccountService savingsAccountService,
-            ICommerceService commerceService)
-        {
-            _userService = userService;
-            _savingsAccountService = savingsAccountService;
-            _commerceService = commerceService;
-        }
+        private readonly IUserService _userService = userService;
+        private readonly IUserReadOnlyService _userReadOnlyService = userReadOnlyService;
+        private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
+        private readonly ICommerceService _commerceService = commerceService;
 
         /// <summary>
         /// Obtiene un listado paginado de usuarios (excepto usuarios con rol Comercio).
@@ -56,7 +48,7 @@ namespace ArtemisBank.WebAPI.Controllers.v1
                 };
             }
 
-            var result = await _userService.GetAllAsync(page, pageSize, roleFilter);
+            var result = await _userReadOnlyService.GetAllAsync(page, pageSize, roleFilter);
 
             return Ok(result);
         }
@@ -77,7 +69,7 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20)
         {
-            var result = await _userService.GetCommerceUsersAsync(page, pageSize);
+            var result = await _userReadOnlyService.GetCommerceUsersAsync(page, pageSize);
 
             return Ok(result);
         }
@@ -191,7 +183,7 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var user = await _userService.GetByIdAsync(id);
+            var user = await _userReadOnlyService.GetByIdAsync(id);
             if (user == null)
                 return NotFound(new { message = "User not found." });
 
@@ -249,7 +241,7 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             if (adminId == id)
                 return StatusCode(403, new { message = "You cannot modify your own status." });
 
-            var user = await _userService.GetByIdAsync(id);
+            var user = await _userReadOnlyService.GetByIdAsync(id);
             if (user == null)
                 return NotFound(new { message = "User not found." });
 
@@ -276,7 +268,7 @@ namespace ArtemisBank.WebAPI.Controllers.v1
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetUserById([FromRoute] string id)
         {
-            var user = await _userService.GetByIdAsync(id);
+            var user = await _userReadOnlyService.GetByIdAsync(id);
 
             if (user == null)
                 return NotFound(new { message = "User not found." });

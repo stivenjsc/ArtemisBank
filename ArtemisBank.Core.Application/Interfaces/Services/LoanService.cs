@@ -1,20 +1,22 @@
-using AutoMapper;
 using ArtemisBank.Core.Application.DTOs;
 using ArtemisBank.Core.Application.DTOs.Loan;
+using ArtemisBank.Core.Application.DTOs.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Entities;
 using ArtemisBank.Core.Domain.Enums;
 using ArtemisBank.Core.Domain.Interfaces;
+using AutoMapper;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
     public class LoanService(ILoanRepository repo, ILoanInstallmentRepository installmentRepo, ITransactionRepository transactionrepo, 
-        ISavingsAccountRepository accountRepo, IMapper mapper) : ILoanService
+        ISavingsAccountRepository accountRepo, IUserReadOnlyService user, IMapper mapper) : ILoanService
     {
         private readonly ILoanRepository _repo = repo;
         private readonly ILoanInstallmentRepository _installmentRepo = installmentRepo;
         private readonly ITransactionRepository _transactionRepo = transactionrepo;
         private readonly ISavingsAccountRepository _accountRepo = accountRepo;
+        private readonly IUserReadOnlyService _userService = user;
         private readonly IMapper _mapper = mapper;
 
         public async Task<LoanDto> GetByIdAsync(int id)
@@ -39,6 +41,13 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         {
             var entities = await _repo.GetAllPagedAsync(page, pageSize, status, cedula);
             var items = _mapper.Map<IEnumerable<LoanDto>>(entities);
+
+            foreach (var item in items)
+            {
+                var user = await _userService.GetByIdAsync(item.ClientId);
+                if (user != null)
+                    item.ClientFullName = $"{user.FirstName} {user.LastName}";
+            }
             var totalCount = await _repo.GetTotalActiveLoansCountAsync();
 
             return new PaginatedResult<LoanDto>
@@ -49,7 +58,22 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 PageSize = pageSize
             };
         }
+        public async Task<IEnumerable<UserDto>> GetActiveClientsWithoutLoanAsync(string? cedula = null)
+        {
+            var allActiveClients = await _userService.GetActiveClientsAsync(cedula);
 
+            // 2. Filtrar usando la lógica de préstamos que ya conoce este servicio
+            var filteredClients = new List<UserDto>();
+            foreach (var client in allActiveClients)
+            {
+                var hasActiveLoan = await _repo.ClientHasActiveLoanAsync(client.Id);
+                if (!hasActiveLoan)
+                {
+                    filteredClients.Add(client);
+                }
+            }
+            return filteredClients;
+        }
         public async Task<LoanDto> AssignAsync(AssignLoanDto dto)
         {
             if (await _repo.ClientHasActiveLoanAsync(dto.ClientId))
@@ -242,6 +266,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             loan.AnualInterestRate = newAnnualInterestRate;
             await _repo.UpdateAsync(loan);
         }
+
         #endregion
     }
 }

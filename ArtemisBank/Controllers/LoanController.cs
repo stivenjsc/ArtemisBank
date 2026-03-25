@@ -9,11 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = nameof(UserRole.Admin))]
-    public class LoanController(ILoanService loanService, ILoanInstallmentService installmentService, IUserService userService) : Controller
+    public class LoanController(ILoanService loanService, ILoanInstallmentService installmentService, IUserReadOnlyService userService) : Controller
     {
         private readonly ILoanService _loanService = loanService;
         private readonly ILoanInstallmentService _installmentService = installmentService;
-        private readonly IUserService _userService = userService;
+        private readonly IUserReadOnlyService _userService = userService;
 
         #region List
 
@@ -57,7 +57,7 @@ namespace ArtemisBank.Controllers
         public async Task<IActionResult> SelectClient(string? cedula = null)
         {
             var averageDebt = await _loanService.GetAverageDebtAsync();
-            var clients = await _userService.GetActiveClientsWithoutLoanAsync(cedula);
+            var clients = await _loanService.GetActiveClientsWithoutLoanAsync(cedula);
 
             var vm = new SelectClientViewModel
             {
@@ -75,7 +75,7 @@ namespace ArtemisBank.Controllers
         {
             if (string.IsNullOrWhiteSpace(vm.SelectedClientId))
             {
-                vm.Clients = await _userService.GetActiveClientsWithoutLoanAsync(vm.CurrentCedula);
+                vm.Clients = await _loanService.GetActiveClientsWithoutLoanAsync(vm.CurrentCedula);
                 ViewBag.Error = "Please select a client.";
                 return View(vm);
             }

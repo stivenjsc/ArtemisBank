@@ -10,12 +10,12 @@ using ArtemisBank.Core.Domain.Interfaces;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class CreditCardService(ICreditCardRepository repo, ISavingsAccountRepository accountRepo, IMapper mapper, IUserService user, IEmailServices email) : ICreditCardService
+    public class CreditCardService(ICreditCardRepository repo, ISavingsAccountRepository accountRepo, IMapper mapper, IUserReadOnlyService user, IEmailServices email) : ICreditCardService
     {
         private readonly ICreditCardRepository _repo = repo;
         private readonly ISavingsAccountRepository _accountRepo = accountRepo;
         private readonly IMapper _mapper = mapper;
-        private readonly IUserService _userService = user;
+        private readonly IUserReadOnlyService _userService = user;
         private readonly IEmailServices _emailService = email;
 
         public async Task<CreditCardDto> GetByIdAsync(int id)
@@ -40,6 +40,13 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         {
             var entities = await _repo.GetAllPagedAsync(page, pageSize, status, cedula);
             var items = _mapper.Map<IEnumerable<CreditCardDto>>(entities);
+
+            foreach (var item in items)
+            {
+                var user = await _userService.GetByIdAsync(item.ClientId);
+                if (user != null)
+                    item.ClientFullName = $"{user.FirstName} {user.LastName}";
+            }
             var totalCount = await _repo.GetTotalActiveCardsCountAsync();
 
             return new PaginatedResult<CreditCardDto>

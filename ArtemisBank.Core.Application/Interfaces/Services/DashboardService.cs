@@ -10,14 +10,14 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 {
     public class DashboardService( ITransactionRepository transactionRepo, ISavingsAccountRepository accountRepo, ICreditCardRepository cardRepo,
         ILoanRepository loanRepo,
-        IUserService userService,
+        IUserReadOnlyService userService,
         IMapper mapper) : IDashboardService
     {
         private readonly ITransactionRepository _transactionRepo = transactionRepo;
         private readonly ISavingsAccountRepository _accountRepo = accountRepo;
         private readonly ICreditCardRepository _cardRepo = cardRepo;
         private readonly ILoanRepository _loanRepo = loanRepo;
-        private readonly IUserService _userService = userService;
+        private readonly IUserReadOnlyService _userService = userService;
         private readonly IMapper _mapper = mapper;
 
         public async Task<DashboardAdminDto> GetAdminDashboardAsync()

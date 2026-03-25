@@ -10,13 +10,13 @@ namespace ArtemisBank.Controllers
 {
     [Authorize(Roles = $"{nameof(UserRole.Admin)},{nameof(UserRole.Client)}")]
     public class CreditCardController( ICreditCardService creditCardService, ISavingsAccountService savingsAccountService,
-        ICreditCardConsumptionService consumptionService, ILoanService loan, IUserService user) : Controller
+        ICreditCardConsumptionService consumptionService, ILoanService loan, IUserReadOnlyService user) : Controller
     {
         private readonly ICreditCardService _creditCardService = creditCardService;
         private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
         private readonly ICreditCardConsumptionService _consumptionService = consumptionService;
         private readonly ILoanService _loanService = loan;
-        private readonly IUserService _userService = user;
+        private readonly IUserReadOnlyService _userService = user;
 
         #region Admin - List
 

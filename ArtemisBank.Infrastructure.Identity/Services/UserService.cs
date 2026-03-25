@@ -1,8 +1,6 @@
-using ArtemisBank.Core.Application.DTOs;
 using ArtemisBank.Core.Application.DTOs.User;
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.Core.Domain.Enums;
-using ArtemisBank.Core.Domain.Interfaces;
 using ArtemisBank.Infrastructure.Identity.Entities;
 using ArtemisBank.Infrastructure.Shared.EmailServices;
 using ArtemisBank.Infrastructure.Shared.EmailServices.IEmailService;
@@ -13,12 +11,11 @@ using Microsoft.Extensions.Configuration;
 
 namespace ArtemisBank.Infrastructure.Identity.Services
 {
-    public class UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ILoanRepository loanRepository,
-        ICorreoServices emailServices, ISavingsAccountService savingsAccountService, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : IUserService
+    public class UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ICorreoServices emailServices, 
+        ISavingsAccountService savingsAccountService, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
-        private readonly ILoanRepository _loanRepository = loanRepository;
         private readonly ICorreoServices _emailService = emailServices;
         private readonly ISavingsAccountService _savingsAccountService = savingsAccountService;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
@@ -230,76 +227,6 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             return true;
         }
 
-        public async Task<UserDto> GetByIdAsync(string userId)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) return null!;
-
-            var roles = await _userManager.GetRolesAsync(user);
-
-            return MapToDto(user, roles.FirstOrDefault());
-        }
-
-        public async Task<PaginatedResult<UserDto>> GetAllAsync(int page, int pageSize = 20, UserRole? role = null)
-        {
-            var query = _userManager.Users.Where(u => u.Role != UserRole.Commerce).OrderByDescending(u => u.Id.CompareTo(""));
-
-            if (role.HasValue)
-            {
-                var usersInRole = await _userManager.GetUsersInRoleAsync(role.Value.ToString());
-                var userIds = usersInRole.Select(u => u.Id).ToHashSet();
-                query = (IOrderedQueryable<ApplicationUser>)query.Where(u => u.Role == role.Value);
-            }
-
-            var totalCount = await query.CountAsync();
-            var users = await query.OrderBy(u => u.UserName).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-
-            var userDtos = new List<UserDto>();
-
-            foreach (var user in users)
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                userDtos.Add(MapToDto(user, roles.FirstOrDefault()));
-            }
-
-            return new PaginatedResult<UserDto>
-            {
-                Items = userDtos,
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize
-            };
-        }
-
-        public async Task<PaginatedResult<UserDto>> GetCommerceUsersAsync(int page, int pageSize = 20)
-        {
-            var query = _userManager.Users
-                .Where(u => u.Role == UserRole.Commerce)
-                .OrderByDescending(u => u.Id);
-
-            var totalCount = await query.CountAsync();
-            var users = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            var userDtos = new List<UserDto>();
-
-            foreach (var user in users)
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                userDtos.Add(MapToDto(user, roles.FirstOrDefault()));
-            }
-
-            return new PaginatedResult<UserDto>
-            {
-                Items = userDtos,
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize
-            };
-        }
-
         public async Task<bool> ChangeStatusAsync(string adminId, string userId, bool isActive)
         {
             if (adminId == userId) return false;
@@ -350,56 +277,11 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             return result.Succeeded;
         }
 
-        public async Task<int> GetInactiveClientsCountAsync()
-        {
-            return await _userManager.Users.CountAsync(u => u.Role == UserRole.Client && !u.IsActive);
-        }
-
-        public async Task<int> GetActiveClientsCountAsync()
-        {
-            return await _userManager.Users.CountAsync(u => u.Role == UserRole.Client && u.IsActive);
-        }
-
-        public async Task<IEnumerable<UserDto>> GetActiveClientsWithoutLoanAsync(string? cedula = null)
-        {
-            var query = _userManager.Users.Where(u => u.Role == UserRole.Client && u.IsActive);
-
-            if (!string.IsNullOrEmpty(cedula)) query = query.Where(u => u.Cedula.Contains(cedula));
-
-            var clients = await query.ToListAsync();
-
-            var result = new List<UserDto>();
-            foreach (var client in clients)
-            {
-                var hasActiveLoan = await _loanRepository.ClientHasActiveLoanAsync(client.Id);
-                if (!hasActiveLoan) result.Add(MapToDto(client, UserRole.Client.ToString()));
-            }
-
-            return result;
-        }
-
-        public async Task<IEnumerable<UserDto>> GetActiveClientsAsync(string? cedula = null)
-        {
-            var query = _userManager.Users.Where(u => u.Role == UserRole.Client && u.IsActive);
-
-            if (!string.IsNullOrEmpty(cedula)) query = query.Where(u => u.Cedula.Contains(cedula));
-
-            var clients = await query.ToListAsync();
-
-            return clients.Select(u => MapToDto(u, UserRole.Client.ToString()));
-        }
-
         public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
         }
-
-        public async Task<string?> GetActivationTokenAsync(string userId)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-            return user?.ActivationToken;
-        }
-
+        
         #region private methods
         private static AuthenticationResult Fail(string error) =>
             new() { Success = false, Error = error };
@@ -471,19 +353,6 @@ namespace ArtemisBank.Infrastructure.Identity.Services
 
             return "https://localhost:7108";
         }
-
-        private static UserDto MapToDto(ApplicationUser user, string? roleName) =>
-            new()
-            {
-                Id = user.Id,
-                UserName = user.UserName!,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Cedula = user.Cedula,
-                Email = user.Email!,
-                Role = string.IsNullOrEmpty(roleName) ? UserRole.Client : Enum.Parse<UserRole>(roleName),
-                IsActive = user.IsActive
-            };
         #endregion
     }
 }

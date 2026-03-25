@@ -1,18 +1,16 @@
 using ArtemisBank.Core.Application.Interfaces.IServices;
 using ArtemisBank.WebAPI.DTOs.Account;
-using ArtemisBank.Infrastructure.Identity.Entities;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArtemisBank.WebAPI.Controllers.v1
 {
     [ApiVersion("1.0")]
-    public class AccountController(IUserService userService, UserManager<ApplicationUser> userManager,IJwtService jwtService) : BaseApiController
+    public class AccountController(IUserService userService, IUserReadOnlyService userReadOnlyService, IJwtService jwtService) : BaseApiController
     {
         private readonly IUserService _userService = userService;
-        private readonly UserManager<ApplicationUser> _userManager = userManager;
+        private readonly IUserReadOnlyService _userReadOnlyService = userReadOnlyService;
         private readonly IJwtService _jwtService = jwtService;
 
         /// <summary>
@@ -117,7 +115,7 @@ namespace ArtemisBank.WebAPI.Controllers.v1
             if (request.Password != request.ConfirmPassword)
                 return BadRequest(new { message = "The passwords do not match." });
 
-            var user = await _userService.GetByIdAsync(request.UserId);
+            var user = await _userReadOnlyService.GetByIdAsync(request.UserId);
             if (user == null || string.IsNullOrWhiteSpace(user.UserName))
                 return BadRequest(new { message = "The user is invalid." });
 

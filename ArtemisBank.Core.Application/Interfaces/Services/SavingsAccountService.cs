@@ -10,10 +10,11 @@ using AutoMapper;
 
 namespace ArtemisBank.Core.Application.Interfaces.Services
 {
-    public class SavingsAccountService(ISavingsAccountRepository repo, IMapper mapper, ITransactionRepository transrepo) : ISavingsAccountService
+    public class SavingsAccountService(ISavingsAccountRepository repo, IMapper mapper, IUserReadOnlyService user, ITransactionRepository transrepo) : ISavingsAccountService
     {
         private readonly ISavingsAccountRepository _repo = repo;
         private readonly IMapper _mapper = mapper;
+        private readonly IUserReadOnlyService _userService = user;
         private readonly ITransactionRepository _transrepo = transrepo;
 
         public async Task<SavingsAccountDto> GetByIdAsync(int id)
@@ -44,6 +45,14 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         {
             var entities = await _repo.GetAllPagedAsync(page, pageSize, status, type);
             var items = _mapper.Map<IEnumerable<SavingsAccountDto>>(entities);
+
+            foreach (var item in items)
+            {
+                var user = await _userService.GetByIdAsync(item.UserId);
+                if (user != null)
+                    item.OwnerFullName = $"{user.FirstName} {user.LastName}";
+            }
+
             var totalCount = await _repo.GetTotalActiveAccountsCountAsync();
 
             return new PaginatedResult<SavingsAccountDto>

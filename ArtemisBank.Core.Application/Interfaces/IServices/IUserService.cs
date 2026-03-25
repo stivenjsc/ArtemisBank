@@ -1,6 +1,4 @@
-using ArtemisBank.Core.Application.DTOs;
 using ArtemisBank.Core.Application.DTOs.User;
-using ArtemisBank.Core.Domain.Enums;
 
 namespace ArtemisBank.Core.Application.Interfaces.IServices
 {
@@ -20,18 +18,8 @@ namespace ArtemisBank.Core.Application.Interfaces.IServices
         Task<bool> GeneratePasswordResetTokenAsync(string username);
         Task<bool> ResetPasswordAsync(string username, string token, string newPassword);
 
-        // User management
-        Task<UserDto> GetByIdAsync(string userId);
-        Task<PaginatedResult<UserDto>> GetAllAsync(int page, int pageSize = 20, UserRole? role = null);
-        Task<PaginatedResult<UserDto>> GetCommerceUsersAsync(int page, int pageSize = 20);
-        Task<int> GetInactiveClientsCountAsync();
-        Task<int> GetActiveClientsCountAsync();
-        Task<IEnumerable<UserDto>> GetActiveClientsWithoutLoanAsync(string? cedula = null);
-        Task<IEnumerable<UserDto>> GetActiveClientsAsync(string? cedula = null);
-
         Task<bool> UpdateAsync(UpdateUserDto dto);
         Task<bool> ChangeStatusAsync(string adminId, string userId, bool isActive);
         Task LogoutAsync();
-        Task<string?> GetActivationTokenAsync(string userId);
     }
 }

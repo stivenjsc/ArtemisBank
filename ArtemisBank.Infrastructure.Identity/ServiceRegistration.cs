@@ -60,6 +60,7 @@ namespace ArtemisBank.Infrastructure.Identity
 
             #region IOC
 
+            services.AddTransient<IUserReadOnlyService, UserReadOnlyService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IJwtService, JwtService>();
             services.AddTransient<ICorreoServices, EmailService>();
