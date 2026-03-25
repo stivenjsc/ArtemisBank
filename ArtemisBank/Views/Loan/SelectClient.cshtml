@@ -11,56 +11,65 @@
     <div class="stat-value money">@Model.AverageDebt</div>
 </div>
 
-<form method="post" asp-controller="Loan" asp-action="SelectClient">
-    @Html.AntiForgeryToken()
-    <div class="table-card">
-        <div class="table-card-header">
-            <h5>
-                <i class="fa-solid fa-users me-2" style="color:var(--emerald-600)"></i>
-                Available Clients
-            </h5>
-            <input type="text" name="cedula" value="@Model.CurrentCedula" class="form-control form-control-sm" placeholder="Search by ID..." style="width:200px" />
-        </div>
-
-        <div class="table-responsive">
-            <table class="artemis-table">
-                <thead>
-                    <tr>
-                        <th style="width:40px"></th>
-                        <th>ID Number</th>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>Current Debt</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var client in Model.Clients!)
-                    {
-                        <tr>
-                            <td>
-                                <input type="radio" name="selectedClientId" value="@client.Id" class="form-check-input" style="width:18px; height:18px; accent-color:var(--emerald-600)" />
-                            </td>
-                            <td style="letter-spacing:1px">@client.Cedula</td>
-                            <td>@client.FirstName @client.LastName</td>
-                            <td>@client.Email</td>
-                            <td>
-                                <span class="money-value @(client.TotalDebt > Model.AverageDebt ? "red" : "green")">
-                                    RD$ @client.TotalDebt
-                                </span>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center p-3 border-top">
-            <a asp-controller="Loan" asp-action="Index" class="btn-artemis btn-ghost-artemis">
-                <i class="fa-solid fa-arrow-left"></i> Cancel
-            </a>
-            <button type="submit" class="btn-artemis btn-primary-artemis">
-                Next Step <i class="fa-solid fa-arrow-right"></i>
-            </button>
-        </div>
+@if (Model.Clients == null || !Model.Clients.Any())
+{
+    <div class="alert-artemis alert-artemis-warning text-center p-5">
+        <i class="fa-solid fa-user-slash mb-3" style="font-size: 3rem; color: #d97706;"></i>
+        <h4>No clients available</h4>
+        <p class="text-muted">No active clients were found with no outstanding loans.</p>
+        <a asp-controller="Admin" asp-action="Dashboard" class="btn-artemis btn-ghost-artemis">
+            <i class="fa-solid fa-arrow-left"></i> Return to Dashboard
+        </a>
     </div>
-</form>
+}
+else
+{
+    <form method="post" asp-controller="Loan" asp-action="SelectClient">
+        @Html.AntiForgeryToken()
+        <div class="table-card">
+            <div class="table-card-header">
+                <h5><i class="fa-solid fa-users me-2" style="color:var(--emerald-600)"></i> Available Clients</h5>
+                <input type="text" name="cedula" value="@Model.CurrentCedula" class="form-control form-control-sm" placeholder="Search by ID..." style="width:200px" />
+            </div>
+
+            <div class="table-responsive">
+                <table class="artemis-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px"></th>
+                            <th>ID Number</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Current Debt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var client in Model.Clients!)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="radio" name="selectedClientId" value="@client.Id" class="form-check-input" required />
+                                </td>
+                                <td>@client.Cedula</td>
+                                <td>@client.FirstName @client.LastName</td>
+                                <td>@client.Email</td>
+                                <td>
+                                    <span class="money-value @(client.TotalDebt > Model.AverageDebt ? "red" : "green")">
+                                        RD$ @client.TotalDebt
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                <a asp-controller="Loan" asp-action="Index" class="btn-artemis btn-ghost-artemis">Cancel</a>
+                <button type="submit" class="btn-artemis btn-primary-artemis">
+                    Next Step <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+}

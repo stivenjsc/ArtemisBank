@@ -237,12 +237,16 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             var loan = await _repo.GetByIdAsync(loanId);
             if (loan == null) throw new Exception("Loan not found");
 
+            loan.AnualInterestRate = newAnnualInterestRate;
+            await _repo.UpdateAsync(loan);
+
             var pendingInstallments = (await _installmentRepo.GetByLoanIdAsync(loanId))
                 .Where(i => i.Status != InstallmentStatus.Paid).OrderBy(i => i.InstallmentNumber).ToList();
             if (!pendingInstallments.Any()) return;
 
             decimal remainingBalance = pendingInstallments.Sum(i => i.InstallmentAmount - i.AmountPaid);
             int remainingMonths = pendingInstallments.Count;
+
             double monthlyRate = (double)newAnnualInterestRate / 100 / 12;
             decimal newFixedPayment;
 

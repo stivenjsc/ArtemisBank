@@ -5,6 +5,7 @@ using ArtemisBank.Core.Application.ViewModels.Loan;
 using ArtemisBank.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ArtemisBank.Controllers
 {
@@ -148,12 +149,14 @@ namespace ArtemisBank.Controllers
             }
             try
             {
+                var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 await _loanService.AssignAsync(new AssignLoanDto
                 {
                     ClientId = vm.ClientId,
                     Amount = vm.Amount,
                     AnnualInterestRate = vm.AnnualInterestRate,
-                    TermInMonths = vm.TermInMonths
+                    TermInMonths = vm.TermInMonths,
+                    AdminId = adminId ?? string.Empty
                 });
 
                 TempData["Success"] = "Loan has been successfully assigned.";
