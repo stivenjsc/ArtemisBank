@@ -132,6 +132,8 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                     Amount = dto.Amount,
                     TransactionDate = DateTime.UtcNow,
                     Type = TransactionType.Credit,
+                    Origin = loan.LoanNumber,
+                    Beneficiary = primaryAccount.AccountNumber,
                     SourceAccountNumber = loan.LoanNumber,
                     DestinationAccountNumber = primaryAccount.AccountNumber,
                     Description = $"Loan disbursement {loan.LoanNumber}",
