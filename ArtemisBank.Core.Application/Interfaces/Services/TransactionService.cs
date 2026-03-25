@@ -263,6 +263,13 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
         public async Task CashierPayCreditCardAsync(CashierPayCreditCardDto dto)
         {
+            var account = await _accountRepo.GetByAccountNumberAsync(dto.SourceAccountNumber);
+            if (account == null)
+                throw new Exception("The source account does not exist.");
+
+            if (account.Status != AccountStatus.Active)
+                throw new InvalidOperationException("Cannot process payment from an inactive or cancelled account.");
+
             var card = await _creditCardRepo.GetByCardNumberAsync(dto.CardNumber);
             if (card == null)
                 throw new Exception("Credit card not found.");
@@ -270,17 +277,32 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             if (card.Status != CardStatus.Active)
                 throw new InvalidOperationException("Cannot process payments for an inactive or cancelled card.");
 
+            if (account.Balance < dto.Amount)
+                throw new InvalidOperationException("Insufficient funds in the source account.");
+
+            if (card.AmountOwed <= 0)
+                throw new InvalidOperationException("This card has no outstanding debt.");
+
             var actualPayment = Math.Min(dto.Amount, card.AmountOwed);
+
+            account.Balance -= actualPayment;
             card.AmountOwed -= actualPayment;
+
+            await _accountRepo.UpdateAsync(account);
             await _creditCardRepo.UpdateAsync(card);
 
             var transaction = new Transaction
             {
-                Amount = dto.Amount,
-                Type = TransactionType.Credit,
+                Amount = actualPayment,
+                Type = TransactionType.Debit,
+                Origin = dto.SourceAccountNumber,
+                Beneficiary = dto.CardNumber,
+                Status = TransactionStatus.Approved,
+                TransactionDate = DateTime.UtcNow,
+                SavingAccountId = account.Id,
+                SourceAccountNumber = dto.SourceAccountNumber,
                 DestinationAccountNumber = dto.CardNumber,
-                SourceAccountNumber = "CASHIER",
-                Description = "Credit card payment made at branch (Cash)",
+                Description = "Credit card payment made at branch",
                 CreatedAt = DateTime.UtcNow
             };
             await _repo.AddAsync(transaction);
@@ -291,7 +313,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 try
                 {
                     await _emailService.SendAsync(user.Email, "Credit Card Payment Received",
-                        $"A payment of {dto.Amount:C2} has been applied to your card ending in {card.CardNumber.Substring(card.CardNumber.Length - 4)}.");
+                        $"A payment of {actualPayment:C2} has been applied to your card ending in {card.CardNumber.Substring(card.CardNumber.Length - 4)}.");
                 }
                 catch { }
             }

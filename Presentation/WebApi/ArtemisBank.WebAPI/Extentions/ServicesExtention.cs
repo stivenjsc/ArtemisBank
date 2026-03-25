@@ -24,6 +24,19 @@ namespace ArtemisBank.WebAPI.Extentions
                         Url = new Uri("https://www.itla.edu.do")
                     }
                 });
+
+                var bearerScheme = new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Enter: Bearer {your JWT token}"
+                };
+
+                options.AddSecurityDefinition("Bearer", bearerScheme);
+
                 options.DescribeAllParametersInCamelCase();
             });
         }
