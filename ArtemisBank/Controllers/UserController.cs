@@ -109,23 +109,23 @@ namespace ArtemisBank.Controllers
 
                 if (!updateResult) throw new Exception("Could not update user.");
 
-                if (vm.Role == UserRole.Client &&
-                    vm.AdditionalAmount.HasValue &&
-                    vm.AdditionalAmount.Value > 0)
+                if (vm.Role == UserRole.Client && vm.AdditionalAmount.HasValue && vm.AdditionalAmount.Value > 0)
                 {
-                    var primaryAccount = await _savingsAccountService
-                        .GetPrimaryAccountByClientIdAsync(vm.Id);
+                    var primaryAccount = await _savingsAccountService.GetPrimaryAccountByClientIdAsync(vm.Id);
 
                     if (primaryAccount != null)
                     {
-                        primaryAccount.Balance += vm.AdditionalAmount.Value;
-                        await _savingsAccountService.UpdateAsync(primaryAccount);
-                        
-                        await _transactionService.DepositAsync(new CashierDepositDto
+                        var depositDto = new CashierDepositDto
                         {
                             AccountNumber = primaryAccount.AccountNumber,
                             Amount = vm.AdditionalAmount.Value
-                        });
+                        };
+
+                        await _transactionService.DepositAsync(depositDto);
+                    }
+                    else
+                    {
+                        throw new Exception("The customer does not have a primary account associated with them.");
                     }
                 }
 
@@ -134,6 +134,7 @@ namespace ArtemisBank.Controllers
             }
             catch (Exception ex)
             {
+                
                 vm.HasError = true;
                 vm.Error = ex.Message;
                 return View(vm);

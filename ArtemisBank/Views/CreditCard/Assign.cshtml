@@ -31,15 +31,20 @@
         <div class="table-responsive">
             <table class="artemis-table">
                 <thead>
-                    <tr><th style="width:40px"></th><th>ID Number</th><th>Full Name</th><th>Email</th><th>Current Debt</th></tr>
+                    <tr>
+                        <th style="width:40px"></th>
+                        <th>ID Number</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Current Debt</th>
+                    </tr>
                 </thead>
                 <tbody>
                     @foreach (var client in Model.Clients)
                     {
                         <tr>
                             <td>
-                                <input type="radio" name="ClientId" value="@client.Id"
-                                       class="form-check-input" style="width:18px;height:18px;accent-color:var(--emerald-600)" />
+                                <input type="radio" name="ClientId" value="@client.Id" class="form-check-input" style="width:18px;height:18px;accent-color:var(--emerald-600)" />
                             </td>
                             <td style="letter-spacing:1px">@client.Cedula</td>
                             <td>@client.FirstName @client.LastName</td>

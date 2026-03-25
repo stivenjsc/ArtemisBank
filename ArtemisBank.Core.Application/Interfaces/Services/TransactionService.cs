@@ -207,7 +207,8 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 DestinationAccountNumber = cashierDepositDto.AccountNumber,
                 SourceAccountNumber = "CASHIER",
                 Description = "Cash deposit made at branch",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                SavingAccountId = account.Id
             };
             await _repo.AddAsync(transaction);
             var user = await _userService.GetByIdAsync(account.UserId);
@@ -245,7 +246,8 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 SourceAccountNumber = dto.AccountNumber,
                 DestinationAccountNumber = "CASHIER",
                 Description = "Cash withdrawal made at branch",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                SavingAccountId = account.Id
             };
             await _repo.AddAsync(transaction);
 
@@ -368,7 +370,8 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 SourceAccountNumber = Dto.SourceAccountNumber,
                 DestinationAccountNumber = Dto.LoanNumber,
                 Description = $"Loan payment applied to {loan.LoanNumber}",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                SavingAccountId = account.Id
             });
             var user = await _userService.GetByIdAsync(loan.ClientId);
             await _emailService.SendAsync(user.Email, "Loan Payment Applied",

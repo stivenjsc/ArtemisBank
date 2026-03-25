@@ -19,38 +19,47 @@
                     <h4 class="mb-0" style="font-family:'Playfair Display',serif">Edit user</h4>
                 </div>
             </div>
+
             <form asp-controller="User" asp-action="Edit" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="Role" />
 
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">First Name</label>
                         <input asp-for="FirstName" class="form-control" />
+                        <span asp-validation-for="FirstName" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Last Name</label>
                         <input asp-for="LastName" class="form-control" />
+                        <span asp-validation-for="LastName" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">ID Number</label>
                         <input asp-for="Cedula" class="form-control" />
+                        <span asp-validation-for="Cedula" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Email</label>
                         <input asp-for="Email" type="email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Username</label>
                         <input asp-for="Username" class="form-control" />
+                        <span asp-validation-for="Username" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Password <small class="text-muted">(empty = no change)</small></label>
                         <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" />
+                        <span asp-validation-for="Password" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Confirm Password</label>
                         <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="••••••••" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger" style="font-size:.78rem"></span>
                     </div>
                     @if (Model.Role.ToString() == "Client")
                     {
@@ -63,6 +72,7 @@
                                 <div class="input-group">
                                     <span class="input-group-text bg-white">RD$</span>
                                     <input asp-for="AdditionalAmount" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                                    <span asp-validation-for="AdditionalAmount" class="text-danger" style="font-size:.78rem"></span>
                                 </div>
                                 <small class="text-muted mt-1 d-block">This will be added to the current balance of the main account</small>
                             </div>
