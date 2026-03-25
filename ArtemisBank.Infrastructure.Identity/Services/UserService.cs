@@ -238,7 +238,7 @@ namespace ArtemisBank.Infrastructure.Identity.Services
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return false;
 
-            user.IsActive = isActive;
+            user.IsActive = !isActive; //admin activated o deactivated manually
 
             if (isActive)
             {
