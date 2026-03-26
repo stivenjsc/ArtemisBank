@@ -200,6 +200,13 @@ namespace ArtemisBank.Controllers
                 return View(vm);
             }
 
+            if (account.UserId != card.ClientId)
+            {
+                vm.HasError = true;
+                vm.Error = "This card does not belong to the owner of the source account. Payments can only be made to cards owned by the same client.";
+                return View(vm);
+            }
+
             if (account.Balance < vm.Amount)
             {
                 vm.HasError = true;
