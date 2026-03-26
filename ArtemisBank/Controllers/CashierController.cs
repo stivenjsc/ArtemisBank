@@ -222,15 +222,7 @@ namespace ArtemisBank.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PayCreditCardConfirm(CashierPayCreditCardViewModel vm)
         {
-            // Validación: la tarjeta debe pertenecer al mismo usuario de la cuenta de origen
-            var card = await _creditCardService.GetByCardNumberAsync(vm.CardNumber);
-            var account = await _savingsAccountService.GetByAccountNumberAsync(vm.SourceAccountNumber);
-            if (card == null || account == null || card.ClientId != account.UserId)
-            {
-                vm.HasError = true;
-                vm.Error = "No puedes pagar una tarjeta que no pertenece al titular de la cuenta de origen.";
-                return View("PayCreditCardConfirm", vm);
-            }
+            
             try
             {
                 await _transactionService.CashierPayCreditCardAsync(new CashierPayCreditCardDto
