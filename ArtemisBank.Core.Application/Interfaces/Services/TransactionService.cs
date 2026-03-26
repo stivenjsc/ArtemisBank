@@ -329,11 +329,11 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             var transaction = new Transaction
             {
                 Amount = actualPayment,
+                TransactionDate = DateTime.UtcNow,
                 Type = TransactionType.Debit,
                 Origin = dto.SourceAccountNumber,
                 Beneficiary = dto.CardNumber,
                 Status = TransactionStatus.Approved,
-                TransactionDate = DateTime.UtcNow,
                 SavingAccountId = account.Id,
                 SourceAccountNumber = dto.SourceAccountNumber,
                 DestinationAccountNumber = destinationReference,
@@ -413,60 +413,81 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
         public async Task CashierTransferAsync(CashierTransferDto dto)
         {
-            using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+            if (dto.Amount <= 0)
+                throw new InvalidOperationException("The transfer amount must be greater than zero.");
 
-            var sourceAccount = await _accountRepo.GetByAccountNumberAsync(dto.SourceAccountNumber);
-            var destAccount = await _accountRepo.GetByAccountNumberAsync(dto.DestinationAccountNumber);
-            try
+            if (dto.SourceAccountNumber == dto.DestinationAccountNumber)
+                throw new InvalidOperationException("The source and destination accounts cannot be the same.");
+
+            var sourceAccount = await _accountRepo.GetByAccountNumberAsync(dto.SourceAccountNumber)
+                ?? throw new Exception("Source account not found.");
+
+            var destAccount = await _accountRepo.GetByAccountNumberAsync(dto.DestinationAccountNumber)
+                ?? throw new Exception("Destination account not found.");
+
+            if (sourceAccount.Status != AccountStatus.Active || destAccount.Status != AccountStatus.Active)
+                throw new InvalidOperationException("Both accounts must be active.");
+
+            if (sourceAccount.Balance < dto.Amount)
+                throw new InvalidOperationException("Insufficient funds in the source account.");
+
+            sourceAccount.Balance -= dto.Amount;
+            destAccount.Balance += dto.Amount;
+
+            await _accountRepo.UpdateAsync(sourceAccount);
+            await _accountRepo.UpdateAsync(destAccount);
+
+            await _repo.AddAsync(new Transaction
             {
-                if (sourceAccount == null || destAccount == null)
-                    throw new Exception("One or both accounts were not found.");
-                if (sourceAccount.Balance < dto.Amount)
-                    throw new InvalidOperationException("Insufficient funds in the source account.");
-                sourceAccount.Balance -= dto.Amount;
-                destAccount.Balance += dto.Amount;
+                Amount = dto.Amount,
+                Type = TransactionType.Debit,
+                TransactionDate = DateTime.UtcNow,
+                Origin = dto.SourceAccountNumber,
+                Beneficiary = dto.DestinationAccountNumber,
+                Status = TransactionStatus.Approved,
+                SavingAccountId = sourceAccount.Id,
+                SourceAccountNumber = dto.SourceAccountNumber,
+                DestinationAccountNumber = dto.DestinationAccountNumber,
+                Description = $"Transfer to {dto.DestinationAccountNumber}",
+                CreatedAt = DateTime.UtcNow
+            });
 
-                await _accountRepo.UpdateAsync(sourceAccount);
-                await _accountRepo.UpdateAsync(destAccount);
-
-                await _repo.AddAsync(new Transaction
-                {
-                    Amount = dto.Amount,
-                    Type = TransactionType.Debit,
-                    SourceAccountNumber = dto.SourceAccountNumber,
-                    DestinationAccountNumber = dto.DestinationAccountNumber,
-                    Description = $"Transfer to {dto.DestinationAccountNumber}",
-                    CreatedAt = DateTime.UtcNow
-                });
-                await _repo.AddAsync(new Transaction
-                {
-                    Amount = dto.Amount,
-                    Type = TransactionType.Credit,
-                    SourceAccountNumber = dto.SourceAccountNumber,
-                    DestinationAccountNumber = dto.DestinationAccountNumber,
-                    Description = $"Transfer from {dto.SourceAccountNumber}",
-                    CreatedAt = DateTime.UtcNow
-                });
-
-                transactionScope.Complete();
-            }
-            catch (Exception ex) 
+            await _repo.AddAsync(new Transaction
             {
-                throw new Exception("Transfer failed: " + ex.Message);
-            }
+                Amount = dto.Amount,
+                Type = TransactionType.Credit,
+                TransactionDate = DateTime.UtcNow,
+                Origin = dto.SourceAccountNumber,
+                Beneficiary = dto.DestinationAccountNumber,
+                Status = TransactionStatus.Approved,
+                SavingAccountId = destAccount.Id,
+                SourceAccountNumber = dto.SourceAccountNumber,
+                DestinationAccountNumber = dto.DestinationAccountNumber,
+                Description = $"Transfer from {dto.SourceAccountNumber}",
+                CreatedAt = DateTime.UtcNow
+            });
+
             var sourceUser = await _userService.GetByIdAsync(sourceAccount.UserId);
             var destUser = await _userService.GetByIdAsync(destAccount.UserId);
 
             if (sourceUser != null)
             {
-                await _emailService.SendAsync(sourceUser.Email, "Transfer Sent",
-                    $"You have sent {dto.Amount:C2} to account {dto.DestinationAccountNumber}.");
+                try
+                {
+                    await _emailService.SendAsync(sourceUser.Email, "Transfer Sent",
+                        $"You have sent {dto.Amount:C2} to account {dto.DestinationAccountNumber}.");
+                }
+                catch { }
             }
 
             if (destUser != null)
             {
-                await _emailService.SendAsync(destUser.Email, "Transfer Received",
-                    $"You have received {dto.Amount:C2} from account {dto.SourceAccountNumber}.");
+                try
+                {
+                    await _emailService.SendAsync(destUser.Email, "Transfer Received",
+                        $"You have received {dto.Amount:C2} from account {dto.SourceAccountNumber}.");
+                }
+                catch { }
             }
         }
     }

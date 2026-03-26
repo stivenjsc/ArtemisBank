@@ -1,0 +1,59 @@
+@model CashierThirdPartyTransferViewModel
+@{
+    ViewData["Title"] = "Confirm Third-Party Transfer";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-5">
+        <div class="confirm-card">
+            <div class="confirm-icon success">
+                <i class="fa-solid fa-circle-question"></i>
+            </div>
+
+            <h4 class="text-center mb-1" style="font-family:'Playfair Display',serif">Confirm transfer</h4>
+
+            @if (Model.HasError)
+            {
+                <div class="alert-artemis alert-artemis-danger mb-3">
+                    <i class="fa-solid fa-circle-exclamation"></i> @Model.Error
+                </div>
+            }
+
+            <div class="detail-box">
+                <div class="meta-row">
+                    <span class="meta-label">Source account</span>
+                    <span class="meta-value">@Model.SourceAccountNumber</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Destination holder</span>
+                    <span class="meta-value fw-600">@Model.DestinationHolderName</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Destination account</span>
+                    <span class="meta-value">@Model.DestinationAccountNumber</span>
+                </div>
+                <div class="meta-row" style="border:none">
+                    <span class="meta-label">Amount</span>
+                    <span class="meta-value" style="font-size:1.1rem;color:var(--emerald-700);font-weight:700">RD$ @Model.Amount.ToString("N2")</span>
+                </div>
+            </div>
+
+            <form asp-controller="Cashier" asp-action="ThirdPartyTransferConfirm" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="SourceAccountNumber" />
+                <input type="hidden" asp-for="DestinationAccountNumber" />
+                <input type="hidden" asp-for="DestinationHolderName" />
+                <input type="hidden" asp-for="Amount" />
+
+                <div class="d-flex gap-2">
+                    <a asp-controller="Cashier" asp-action="Index" class="btn-artemis btn-ghost-artemis flex-fill justify-content-center">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-artemis btn-primary-artemis flex-fill justify-content-center">
+                        <i class="fa-solid fa-check"></i> Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

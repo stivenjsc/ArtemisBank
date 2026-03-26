@@ -361,10 +361,24 @@ namespace ArtemisBank.Controllers
             return View("ThirdPartyTransferConfirm", vm);
         }
 
+        [HttpGet]
+        public IActionResult ThirdPartyTransferConfirm()
+        {
+            TempData["Error"] = "Please complete the transfer form before confirming.";
+            return RedirectToAction(nameof(ThirdPartyTransfer));
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ThirdPartyTransferConfirm(CashierThirdPartyTransferViewModel vm)
         {
+            if (string.IsNullOrWhiteSpace(vm.SourceAccountNumber) || string.IsNullOrWhiteSpace(vm.DestinationAccountNumber) || vm.Amount <= 0)
+            {
+                vm.HasError = true;
+                vm.Error = "Please verify the transfer data before confirming.";
+                return View("ThirdPartyTransferConfirm", vm);
+            }
+
             try
             {
                 await _transactionService.CashierTransferAsync(new CashierTransferDto
