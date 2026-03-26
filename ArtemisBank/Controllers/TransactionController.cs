@@ -200,12 +200,8 @@ namespace ArtemisBank.Controllers
 
             try
             {
-                await _transactionService.PayLoanAsync(new PaymentDto
-                {
-                    SourceAccountNumber = vm.SourceAccountNumber,
-                    DestinationAccountNumber = vm.LoanNumber,
-                    Amount = vm.Amount
-                });
+                // Cambiar para usar LoanService y aplicar el pago correctamente a la cuota
+                await _loanService.PayLoanInstallmentAsync(vm.SourceAccountNumber, vm.LoanNumber, vm.Amount);
 
                 return RedirectToAction("Index", "Client");
             }

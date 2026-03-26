@@ -54,8 +54,8 @@ else
                                 <td>@client.FirstName @client.LastName</td>
                                 <td>@client.Email</td>
                                 <td>
-                                    <span class="money-value @(client.TotalDebt > Model.AverageDebt ? "red" : "green")">
-                                        RD$ @client.TotalDebt
+                                    <span class="money-value @(client.TotalDebt.GetValueOrDefault() > Model.AverageDebt.GetValueOrDefault() ? "red" : "green")">
+                                        RD$ @client.TotalDebt.GetValueOrDefault().ToString("N2")
                                     </span>
                                 </td>
                             </tr>

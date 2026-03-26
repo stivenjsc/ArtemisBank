@@ -22,19 +22,41 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
         public async Task<LoanDto> GetByIdAsync(int id)
         {
             var entity = await _repo.GetByIdAsync(id);
-            return _mapper.Map<LoanDto>(entity);
+            var dto = _mapper.Map<LoanDto>(entity);
+            // Actualizar cuotas y pendiente
+            var installments = await _installmentRepo.GetByLoanIdAsync(entity.Id);
+            dto.TotalInstallments = installments.Count();
+            dto.PaidInstallments = installments.Count(i => i.Status == InstallmentStatus.Paid);
+            dto.PendingAmount = installments.Where(i => i.Status != InstallmentStatus.Paid).Sum(i => i.InstallmentAmount - i.AmountPaid);
+            return dto;
         }
 
         public async Task<LoanDto?> GetByLoanNumberAsync(string loanNumber)
         {
             var entity = await _repo.GetByLoanNumberAsync(loanNumber);
-            return entity is null ? null : _mapper.Map<LoanDto>(entity);
+            if (entity is null) return null;
+            var dto = _mapper.Map<LoanDto>(entity);
+            var installments = await _installmentRepo.GetByLoanIdAsync(entity.Id);
+            dto.TotalInstallments = installments.Count();
+            dto.PaidInstallments = installments.Count(i => i.Status == InstallmentStatus.Paid);
+            dto.PendingAmount = installments.Where(i => i.Status != InstallmentStatus.Paid).Sum(i => i.InstallmentAmount - i.AmountPaid);
+            return dto;
         }
 
         public async Task<IEnumerable<LoanDto>> GetActiveByClientIdAsync(string clientId)
         {
             var entities = await _repo.GetActiveByClientIdAsync(clientId);
-            return _mapper.Map<IEnumerable<LoanDto>>(entities);
+            var dtos = new List<LoanDto>();
+            foreach (var entity in entities)
+            {
+                var dto = _mapper.Map<LoanDto>(entity);
+                var installments = await _installmentRepo.GetByLoanIdAsync(entity.Id);
+                dto.TotalInstallments = installments.Count();
+                dto.PaidInstallments = installments.Count(i => i.Status == InstallmentStatus.Paid);
+                dto.PendingAmount = installments.Where(i => i.Status != InstallmentStatus.Paid).Sum(i => i.InstallmentAmount - i.AmountPaid);
+                dtos.Add(dto);
+            }
+            return dtos;
         }
 
         public async Task<PaginatedResult<LoanDto>> GetAllPagedAsync(int page, int pageSize = 20, LoanStatus? status = null, string? cedula = null)
@@ -100,6 +122,9 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
 
             await _repo.AddAsync(loan);
 
+            // Recupera el préstamo para obtener el ID real
+            var createdLoan = await _repo.GetByLoanNumberAsync(loan.LoanNumber);
+
             // French amortization: fixed monthly payment
             var totalDebt = CalculateTotalLoanDebt(dto.Amount, dto.AnnualInterestRate, dto.TermInMonths);
             var fixedPayment = totalDebt / dto.TermInMonths;
@@ -114,7 +139,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                     Status = InstallmentStatus.Pending,
                     IsOverdue = false,
                     InstallmentNumber = i,
-                    LoanId = loan.Id
+                    LoanId = createdLoan.Id // Usa el ID correcto
                 };
 
                 await _installmentRepo.AddAsync(installment);
@@ -143,7 +168,7 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
                 });
             }
 
-            return _mapper.Map<LoanDto>(loan);
+            return _mapper.Map<LoanDto>(createdLoan);
         }
 
         public async Task<bool> PayLoanInstallmentAsync(string sourceAccountNumber, string loanNumber, decimal amount)
@@ -157,22 +182,30 @@ namespace ArtemisBank.Core.Application.Interfaces.Services
             var loan = await _repo.GetByLoanNumberAsync(loanNumber);
             if (loan == null || loan.Status != LoanStatus.Active) return false;
 
-            var installment = await _installmentRepo.GetFirstPendingInstallmentAsync(loan.Id);
-            if (installment == null) return false;
+            var installments = (await _installmentRepo.GetByLoanIdAsync(loan.Id))
+                .Where(i => i.Status != InstallmentStatus.Paid)
+                .OrderBy(i => i.InstallmentNumber)
+                .ToList();
+            if (!installments.Any()) return false;
 
-            var remaining = installment.InstallmentAmount - installment.AmountPaid;
-            var paymentAmount = Math.Min(amount, remaining);
-
-            account.Balance -= paymentAmount;
-            installment.AmountPaid += paymentAmount;
-
-            if (installment.AmountPaid >= installment.InstallmentAmount)
+            decimal remainingAmount = amount;
+            foreach (var installment in installments)
             {
-                installment.Status = InstallmentStatus.Paid;
+                if (remainingAmount <= 0) break;
+                var remaining = installment.InstallmentAmount - installment.AmountPaid;
+                var payment = Math.Min(remainingAmount, remaining);
+                installment.AmountPaid += payment;
+                if (installment.AmountPaid >= installment.InstallmentAmount)
+                {
+                    installment.Status = InstallmentStatus.Paid;
+                }
+                remainingAmount -= payment;
+                await _installmentRepo.UpdateAsync(installment);
             }
 
+            var totalPaid = amount - remainingAmount;
+            account.Balance -= totalPaid;
             await _accountRepo.UpdateAsync(account);
-            await _installmentRepo.UpdateAsync(installment);
 
             // Check if all installments are paid
             var pendingAmount = await _installmentRepo.GetPendingAmountByLoanIdAsync(loan.Id);
