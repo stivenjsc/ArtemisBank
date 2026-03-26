@@ -364,6 +364,39 @@ h1, h2, h3, h4, .display-font {
     font-size: 1rem;
     letter-spacing: 3px;
     opacity: 0.9;
+    flex: 1;
+    min-width: 0;
+}
+
+.product-card-number-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-visibility-toggle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.card-visibility-toggle:hover {
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.card-visibility-toggle:focus-visible {
+    outline: 2px solid rgba(255,255,255,0.5);
+    outline-offset: 2px;
 }
  
 .product-card-balance {

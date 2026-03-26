@@ -82,11 +82,32 @@
         {
             var available = card.CreditLimit - card.AmountOwed;
             var pct = card.CreditLimit > 0 ? (int)((card.AmountOwed / card.CreditLimit) * 100) : 0;
+            var lastDigits = card.CardNumber.Length > 4
+                ? card.CardNumber.Substring(card.CardNumber.Length - 4)
+                : card.CardNumber;
+            var visibleCardNumber = card.CardNumber.Length == 16
+                ? $"{card.CardNumber.Substring(0, 4)} {card.CardNumber.Substring(4, 4)} {card.CardNumber.Substring(8, 4)} {card.CardNumber.Substring(12, 4)}"
+                : card.CardNumber;
+            var maskedCardNumber = $"**** **** **** {lastDigits}";
             <div class="col-lg-4 col-md-6">
                 <div class="product-card">
                     <div class="product-card-header credit">
                         <div class="product-card-type">Credit Card</div>
-                        <div class="product-card-number">**** **** **** @card.CardNumber.Substring(12)</div>
+                        <div class="product-card-number-row">
+                            <div class="product-card-number js-card-number"
+                                 data-masked-number="@maskedCardNumber"
+                                 data-visible-number="@visibleCardNumber">
+                                @maskedCardNumber
+                            </div>
+                            <button type="button"
+                                    class="card-visibility-toggle"
+                                    data-card-visibility-toggle
+                                    aria-label="Show card number"
+                                    aria-pressed="false"
+                                    title="Show card number">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                         <div class="product-card-balance"><small>Available RD$</small> @available.ToString("N2")</div>
                     </div>
                     <div class="product-card-body">
@@ -110,4 +131,38 @@
             </div>
         }
     </div>
+}
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-card-visibility-toggle]').forEach(function (toggleButton) {
+            toggleButton.addEventListener('click', function () {
+                var wrapper = toggleButton.closest('.product-card-number-row');
+                if (!wrapper) {
+                    return;
+                }
+
+                var cardNumber = wrapper.querySelector('.js-card-number');
+                var icon = toggleButton.querySelector('i');
+
+                if (!cardNumber || !icon) {
+                    return;
+                }
+
+                var isVisible = toggleButton.getAttribute('aria-pressed') === 'true';
+                var nextVisibleState = !isVisible;
+
+                cardNumber.textContent = nextVisibleState
+                    ? cardNumber.dataset.visibleNumber
+                    : cardNumber.dataset.maskedNumber;
+
+                toggleButton.setAttribute('aria-pressed', nextVisibleState.toString());
+                toggleButton.setAttribute('aria-label', nextVisibleState ? 'Hide card number' : 'Show card number');
+                toggleButton.setAttribute('title', nextVisibleState ? 'Hide card number' : 'Show card number');
+
+                icon.classList.toggle('fa-eye', !nextVisibleState);
+                icon.classList.toggle('fa-eye-slash', nextVisibleState);
+            });
+        });
+    </script>
 }
